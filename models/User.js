@@ -27,11 +27,34 @@ UserSchema.methods.validPassword = function(password){
 	return this.hash === hash;
 };
 
+UserSchema.methods.generateJWT = function(){
+	var today = new Date();
+	var exp = new Date(today);
+	exp.setDate(today.getDate() + 60);
+
+	return jwt.sign({
+		id: this._id,
+		username: this.username,
+		exp: parseInt(exp.getTime() / 1000),
+	}, secret)
+};
+
+UserSchema.methods.toAuthJSON = function(){
+	return {
+		username: this.username,
+		email: this.email,
+		token: this.generateJWT(),
+		ebayUsername: this.ebayUsername,
+		ebayToken: this.ebayToken
+	}
+};
+
 UserSchema.methods.setEbayToken = function(){
 
 };
 
 UserSchema.methods.getEbayToken = function(){
 	return this.ebayToken;
-}
+};
+
 mongoose.model('User', UserSchema);
