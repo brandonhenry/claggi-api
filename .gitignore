@@ -20,3 +20,4 @@ node_modules/**
 *.xml
 *.iml
 node_modules/
+node_modules/
