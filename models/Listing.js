@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
-var sku = require('shortid');
+// var sku = require('shortid');
 
-var ListingSchema = new mongoose.Scheme({
+var ListingSchema = new mongoose.Schema({
 	sku: String,
 	quantity: Number,
 	sourcePrice: Number,
