@@ -19,3 +19,4 @@ node_modules/**
 # information for Eclipse / Flash Builder.
 *.xml
 *.iml
+node_modules/
