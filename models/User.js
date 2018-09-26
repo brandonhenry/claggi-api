@@ -3,6 +3,22 @@ var uniqueValidator = require('mongoose-unique-validator');
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 var secret = require('../config').secret;
+var clientID = require('../config').clientID;
+var clientSecret = require('../config').clientSecret;
+var scope = ["https://api.ebay.com/oauth/api_scope", "https://api.ebay.com/oauth/api_scope/sell.marketing.readonly", "https://api.ebay.com/oauth/api_scope/sell.marketing", "https://api.ebay.com/oauth/api_scope/sell.inventory.readonly", "https://api.ebay.com/oauth/api_scope/sell.inventory", "https://api.ebay.com/oauth/api_scope/sell.account.readonly", "https://api.ebay.com/oauth/api_scope/sell.account", "https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly", "https://api.ebay.com/oauth/api_scope/sell.fulfillment", "https://api.ebay.com/oauth/api_scope/sell.analytics.readonly"];
+// Set the configuration settings
+const credentials = {
+    client: {
+        id: clientID,
+        secret: clientSecret
+    },
+    auth: {
+        tokenHost: 'https://api.ebay.com/identity/v1/oauth2/token',
+		authorizeHost: 'https://signin.ebay.com/authorize'
+    }
+};
+
+const oauth2 = require('simple-oauth2').create(credentials);
 
 
 var UserSchema = new mongoose.Schema({
@@ -45,7 +61,7 @@ UserSchema.methods.toAuthJSON = function(){
 		email: this.email,
 		token: this.generateJWT(),
 		ebayUsername: this.ebayUsername,
-		ebayToken: this.ebayToken
+		ebayToken: this.generateAccessToken()
 	}
 };
 
@@ -53,8 +69,35 @@ UserSchema.methods.setEbayToken = function(){
 
 };
 
-UserSchema.methods.getEbayToken = function(){
-	return this.ebayToken;
+UserSchema.methods.generateAccessToken = async function () {
+
+
+// Authorization oauth2 URI
+    const authorizationUri = oauth2.authorizationCode.authorizeURL({
+        redirect_uri: 'Brandon_Henry-BrandonH-SkuGri-akmrj',
+        scope: scope, // also can be an array of multiple scopes, ex. ['<scope1>, '<scope2>', '...']
+        state: ''
+    });
+
+// Redirect example using Express (see http://expressjs.com/api.html#res.redirect)
+    res.redirect(authorizationUri);
+
+// Get the access token object (the authorization code is given from the previous step).
+    const tokenConfig = {
+        code: '<code>',
+        redirect_uri: 'Brandon_Henry-BrandonH-SkuGri-akmrj',
+        scope: scope, // also can be an array of multiple scopes, ex. ['<scope1>, '<scope2>', '...']
+    };
+
+// Save the access token
+    try {
+        const result = await oauth2.authorizationCode.getToken(tokenConfig);
+        const accessToken = oauth2.accessToken.create(result);
+        console.log(accessToken);
+    } catch (error) {
+        console.log('Access Token Error', error.message);
+    }
+
 };
 
 mongoose.model('User', UserSchema);
