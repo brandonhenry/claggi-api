@@ -1,4 +1,7 @@
 var http = require('http'),
+    https = require('https'),
+    privateKey  = fs.readFileSync('sslcert/server.key', 'utf8'),
+    certificate = fs.readFileSync('sslcert/server.crt', 'utf8'),
     path = require('path'),
     methods = require('methods'),
     express = require('express'),
@@ -7,8 +10,9 @@ var http = require('http'),
     cors = require('cors'),
     passport = require('passport'),
     errorhandler = require('errorhandler'),
-    mongoose = require('mongoose');
+    mongoose = require('mongoose'),fs = require('fs');
 
+var credentials = {key: privateKey, cert: certificate};
 var isProduction = process.env.NODE_ENV === 'production';
 
 // Create global app object
@@ -78,6 +82,16 @@ app.use(function(err, req, res, next) {
 });
 
 // finally, let's start our server...
-var server = app.listen( process.env.PORT || 3000, function(){
-  console.log('Listening on port ' + server.address().port);
+// var server = app.listen( process.env.PORT || 3000, function(){
+//   console.log('Listening on port ' + server.address().port);
+// });
+
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(credentials, app);
+
+httpServer.listen(8080, function(){
+  console.log('Listening on port 8080');
+});
+httpsServer.listen(8443, function(){
+  console.log('Listening on port 8443');
 });
