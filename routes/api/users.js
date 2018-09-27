@@ -16,6 +16,15 @@ router.post('/users', function(req, res, next){
   }).catch(next);
 });
 
+router.post('/users/access', passport.authenticate('oauth2', { failureRedirect: '/users/login' }),
+    function(req, res) {
+        // Successful authentication, redirect home.
+        res.redirect('/');
+        console.log('success');
+    });
+
+router.get('/users/request', passport.authenticate('oauth2'));
+
 router.post('/users/login', function(req, res, next){
     if (!req.body.user.email){
       return res.status(422).json({errors: {email: "can't be blank"}});
@@ -64,7 +73,7 @@ router.put('/user', auth.required, function(req, res, next){
       return res.json({user: user.toAuthJSON()});
     })
   }).catch(next);
-})
+});
 
 
 module.exports = router;
