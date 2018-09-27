@@ -1,5 +1,6 @@
 var http = require('http'),
     https = require('https'),
+    fs = require('fs'),
     privateKey  = fs.readFileSync('sslcert/server.key', 'utf8'),
     certificate = fs.readFileSync('sslcert/server.crt', 'utf8'),
     path = require('path'),
@@ -10,7 +11,7 @@ var http = require('http'),
     cors = require('cors'),
     passport = require('passport'),
     errorhandler = require('errorhandler'),
-    mongoose = require('mongoose'),fs = require('fs');
+    mongoose = require('mongoose');
 
 var credentials = {key: privateKey, cert: certificate};
 var isProduction = process.env.NODE_ENV === 'production';

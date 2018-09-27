@@ -10,6 +10,7 @@ var UserSchema = new mongoose.Schema({
 	email: {type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/\S+@\S+\.\S+/, 'is invalid'], index: true},
 	ebayUsername: String,
 	ebayToken: String,
+	ebayRefreshToken: String,
 	hash: String,
 	salt: String
 }, {timestamps: true});
@@ -45,7 +46,8 @@ UserSchema.methods.toAuthJSON = function(){
 		email: this.email,
 		token: this.generateJWT(),
 		ebayUsername: this.ebayUsername,
-		ebayToken: this.generateAccessToken()
+		ebayToken: this.ebayToken,
+		refreshToken: this.ebayRefreshToken
 	}
 };
 
@@ -58,12 +60,13 @@ UserSchema.methods.toProfileJSONFor = function(user){
     }
 };
 
-UserSchema.methods.setEbayToken = function(){
-
+UserSchema.methods.setEbayToken = function(token, refreshToken){
+		this.ebayToken = token;
+		this.ebayRefreshToken = refreshToken;
 };
 
-UserSchema.methods.generateAccessToken = async function (res) {
-
-};
+UserSchema.methods.setEbayUsername = function(username){
+	this.ebayUsername = username;
+}
 
 mongoose.model('User', UserSchema);
