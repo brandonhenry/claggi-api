@@ -16,11 +16,12 @@ router.post('/users', function(req, res, next){
   }).catch(next);
 });
 
-router.post('/users/access', passport.authenticate('oauth2', { failureRedirect: '/users/login' }),
+router.get('/users/access', passport.authenticate('oauth2', { failureRedirect: '/users/login' }),
     function(req, res) {
         // Successful authentication, redirect home.
         res.redirect('/');
         console.log('success');
+        console.log(req.query.code);
     });
 
 router.get('/users/request', passport.authenticate('oauth2'));
