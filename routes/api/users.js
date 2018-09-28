@@ -16,15 +16,17 @@ router.post('/users', function(req, res, next){
   }).catch(next);
 });
 
-router.get('/users/access', passport.authenticate('oauth2', { failureRedirect: '/users/login' }),
-    function(req, res) {
+router.get('/users/access', function(req, res) {
         // Successful authentication, redirect home.
-        res.redirect('/');
-        console.log('success');
-        console.log(req.query.code);
+        res.json(req.query);
     });
 
-router.get('/users/request', passport.authenticate('oauth2'));
+router.get('/users/request', function(req, res, next){
+    passport.authenticate('oauth2', {
+            email: req.query.email
+        })(req, res, next);
+    }
+);
 
 router.post('/users/login', function(req, res, next){
     if (!req.body.user.email){
