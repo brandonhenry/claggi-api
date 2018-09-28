@@ -1,8 +1,8 @@
 var http = require('http'),
     https = require('https'),
     fs = require('fs'),
-    privateKey  = fs.readFileSync('sslcert/server.key', 'utf8'),
-    certificate = fs.readFileSync('sslcert/server.crt', 'utf8'),
+    privateKey  = fs.readFileSync('server.key'),
+    certificate = fs.readFileSync('server.cert'),
     path = require('path'),
     methods = require('methods'),
     express = require('express'),
@@ -83,16 +83,9 @@ app.use(function(err, req, res, next) {
 });
 
 // finally, let's start our server...
-// var server = app.listen( process.env.PORT || 3000, function(){
-//   console.log('Listening on port ' + server.address().port);
-// });
+var server = https.createServer(credentials, app);
 
-var httpServer = http.createServer(app);
-var httpsServer = https.createServer(credentials, app);
+server.listen( process.env.PORT || 3000, function(){
+        console.log('Listening on port ' + server.address().port);
+});
 
-httpServer.listen(8080, function(){
-  console.log('Listening on port 8080');
-});
-httpsServer.listen(8443, function(){
-  console.log('Listening on port 8443');
-});
