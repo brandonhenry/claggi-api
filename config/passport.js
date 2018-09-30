@@ -28,8 +28,9 @@ var authStrategy = new OAuth2Strategy(
         redirectURLName: 'Brandon_Henry-BrandonH-SkuGri-akmrj',
         passReqToCallback: true
     },
-    function(accessToken, done) {
-        console.log(accessToken);
+    function(req, accessToken, refreshToken, params, done, profile) {
+        console.log(params);
+        return done(null, accessToken, refreshToken)
     }
 );
 

@@ -85,7 +85,7 @@ app.use(function(err, req, res, next) {
 // finally, let's start our server...
 var server = https.createServer(credentials, app);
 
-server.listen( process.env.PORT || 3000, function(){
+server.listen( process.env.PORT || 3443, function(){
         console.log('Listening on port ' + server.address().port);
 });
 
