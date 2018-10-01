@@ -21,26 +21,13 @@ router.get('/users/access', function (req, res, next) {
         code: req.query.code,
         failureRedirect: '/',
     }, function (err, accessToken, refreshToken) {
-
-        const {state} = req.query;
-        const {returnTo} = JSON.parse(new Buffer(state, 'base64').toString());
-        console.log(returnTo);
-
         // Successful authentication, redirect home.
+        req.session.user.accessToken = accessToken;
         res.json({success: 'success', accessToken: accessToken, refreshToken: refreshToken});
     })(req, res, next)
 });
 
-router.get('/users/request', function (req, res, next) {
-    const {returnTo} = req.query;
-    const state = returnTo
-        ? new Buffer(JSON.stringify({returnTo})).toString('base64')
-        : undefined;
-
-    const authenticator = passport.authenticate('oauth2', {scope: [], state, email: req.query.email});
-
-    authenticator(req, res, next)
-});
+router.get('/users/request', passport.authenticate('oauth2'));
 
 router.post('/users/login', function (req, res, next) {
     if (!req.body.user.email) {
@@ -58,6 +45,7 @@ router.post('/users/login', function (req, res, next) {
 
         if (user) {
             user.token = user.generateJWT();
+            req.session.user = user;
             return res.json({user: user.toAuthJSON()});
         } else {
             return res.status(422).json(info);
@@ -73,6 +61,11 @@ router.get('/user', auth.required, function (req, res, next) {
 
         return res.json({user: user.toAuthJSON()});
     }).catch(next);
+});
+
+router.get('/users/resources', function (req, res, next){
+    const accessToken = req.session.user; // req.user has the session information including the access token
+    res.json({accessToken: accessToken});
 });
 
 router.put('/user', auth.required, function (req, res, next) {

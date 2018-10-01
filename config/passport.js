@@ -6,6 +6,15 @@ var OAuth2Strategy = require('general-oauth2').Strategy;
 var clientID = require('../config').clientID;
 var clientSecret = require('../config').clientSecret;
 var scope = 'https://api.ebay.com/oauth/api_scope/sell.marketing';
+
+// setup passport (an authentication middleware) and use it with the session provided by express-session
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+passport.deserializeUser((obj, done) => {
+    done(null, obj);
+});
+
 passport.use('local', new LocalStrategy({
     usernameField: 'user[email]',
     passwordField: 'user[password]'

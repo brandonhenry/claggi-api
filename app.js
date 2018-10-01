@@ -82,6 +82,9 @@ app.use(function(err, req, res, next) {
   }});
 });
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 // finally, let's start our server...
 var server = https.createServer(credentials, app);
 
