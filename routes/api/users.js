@@ -21,13 +21,18 @@ router.get('/users/access', function (req, res, next) {
         code: req.query.code,
         failureRedirect: '/',
     }, function (err, accessToken, refreshToken) {
-        User.findById(req.session.user.id).then(function (user) {
+        if (!req.session.user){
+            return res.status(401).json({error: 'must be signed in'});
+        }
+
+        User.findById(req.session.user._id).then(function (user) {
             if (!user) {
                 return res.sendStatus(401);
             }
 
             user.setEbayToken(accessToken, refreshToken);
-            return res.json({success: 'success', accessToken: accessToken, refreshToken: refreshToken});
+            // return res.json({success: 'success', accessToken: accessToken, refreshToken: refreshToken});
+            return res.json({user: user.toAuthJSON()});
         }).catch(next);
 
     })(req, res, next)
