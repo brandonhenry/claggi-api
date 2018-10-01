@@ -9,7 +9,6 @@ var http = require('http'),
     bodyParser = require('body-parser'),
     session = require('express-session'),
     cors = require('cors'),
-    passport = require('passport'),
     errorhandler = require('errorhandler'),
     mongoose = require('mongoose');
 
@@ -29,7 +28,7 @@ app.use(bodyParser.json());
 app.use(require('method-override')());
 app.use(express.static(__dirname + '/public'));
 
-app.use(session({ secret: 'conduit', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false  }));
+app.use(session({ secret: 'conduit', cookie: { secure: false, maxAge: 6000000 }, resave: true, saveUninitialized: true  }));
 
 if (!isProduction) {
   app.use(errorhandler());
@@ -44,7 +43,10 @@ if(isProduction){
 
 require('./models/User');
 require('./models/Listing');
-require('./config/passport');
+passport = require('./config/passport.js');
+
+
+passport(app);
 
 app.use(require('./routes'));
 
@@ -81,9 +83,6 @@ app.use(function(err, req, res, next) {
     error: {}
   }});
 });
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 // finally, let's start our server...
 var server = https.createServer(credentials, app);

@@ -21,9 +21,15 @@ router.get('/users/access', function (req, res, next) {
         code: req.query.code,
         failureRedirect: '/',
     }, function (err, accessToken, refreshToken) {
-        // Successful authentication, redirect home.
-        req.session.user.accessToken = accessToken;
-        res.json({success: 'success', accessToken: accessToken, refreshToken: refreshToken});
+        User.findById(req.session.user.id).then(function (user) {
+            if (!user) {
+                return res.sendStatus(401);
+            }
+
+            user.setEbayToken(accessToken, refreshToken);
+            return res.json({success: 'success', accessToken: accessToken, refreshToken: refreshToken});
+        }).catch(next);
+
     })(req, res, next)
 });
 
@@ -61,11 +67,6 @@ router.get('/user', auth.required, function (req, res, next) {
 
         return res.json({user: user.toAuthJSON()});
     }).catch(next);
-});
-
-router.get('/users/resources', function (req, res, next){
-    const accessToken = req.session.user; // req.user has the session information including the access token
-    res.json({accessToken: accessToken});
 });
 
 router.put('/user', auth.required, function (req, res, next) {
