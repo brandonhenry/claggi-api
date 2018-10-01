@@ -65,8 +65,12 @@ UserSchema.methods.setEbayToken = function(token, refreshToken){
 		this.ebayRefreshToken = refreshToken;
 };
 
+UserSchema.methods.getEbayToken = function(){
+	return {accessToken:this.ebayToken, refreshToken:this.refreshToken};
+};
+
 UserSchema.methods.setEbayUsername = function(username){
 	this.ebayUsername = username;
-}
+};
 
 mongoose.model('User', UserSchema);
