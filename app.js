@@ -47,7 +47,6 @@ require('./models/Order');
 require('./models/EbayAccount');
 passport = require('./config/passport.js');
 
-
 passport(app);
 
 app.use(require('./routes'));

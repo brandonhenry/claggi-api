@@ -35,14 +35,14 @@ ListingSchema.plugin(uniqueValidator, {message: 'listing already exists'});
 
 ListingSchema.methods.generateSKU = function(){
 	this.itemSKU = "";
-}
+};
 
 ListingSchema.methods.calculatePrice = function(){
 
-}
+};
 
 ListingSchema.methods.updatePrice = function(){
 
-}
+};
 
-mongoose.model('Listing', ListingSchema);
+mongoose.model('listing', ListingSchema);

@@ -1,25 +1,24 @@
-var moongoose = require('mongoose');
+var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
-var Listing = require('Listing');
-var Order = require('Order');
-var User = require('User');
+var Listing = mongoose.model('listing');
+var Order = mongoose.model('order');
+var User = mongoose.model('user');
 var request = require('request-promise');
 
 var EbayAccount = new mongoose.Schema({
     accessToken: {type: String, required: [true, 'must have accesstoken']},
     refreshToken: {type: String, required: [true, 'must have refreshtoken']},
     username: String,
-    user: User,
+    user: String,
     balance: String,
     listings: {},
-    orders: {},
-});
+    orders: {}
+}, {timestamp: true});
 
 EbayAccount.methods.toJSONFor = function (user) {
     return {
         listings: this.listings,
         orders: this.orders,
-        user: user.toAuthJSON(),
         balance: this.balance
     }
 };

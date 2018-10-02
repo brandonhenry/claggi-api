@@ -34,4 +34,4 @@ OrderSchema.methods.toJSONFor = function(user){
     }
 };
 
-mongoose.model('Order', OrderSchema);
+mongoose.model('order', OrderSchema);

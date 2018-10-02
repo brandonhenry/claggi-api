@@ -31,7 +31,9 @@ router.get('/users/access', function (req, res, next) {
             }
 
             user.setEbayToken(accessToken, refreshToken);
-            return res.json({user: user.toAuthJSON()});
+            user.save().then(function(){
+                return res.json({user: user.toAuthJSON()});
+            });
         }).catch(next);
 
     })(req, res, next)

@@ -1,6 +1,6 @@
 var router = require('express').Router();
 var mongoose = require('mongoose');
-var Listing = mongoose.model('Listing');
+var Listing = mongoose.model('listing');
 var request = require('request');
 // var credentials = require('.../config/credentials.js');
 //
