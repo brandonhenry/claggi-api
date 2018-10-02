@@ -43,6 +43,7 @@ if(isProduction){
 
 require('./models/User');
 require('./models/Listing');
+require('./models/Order');
 passport = require('./config/passport.js');
 
 
