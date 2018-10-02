@@ -7,7 +7,7 @@ var request = require('request-promise');
 
 var EbayAccount = new mongoose.Schema({
     accessToken: {type: String, required: [true, 'must have accesstoken']},
-    refreshToken: {type: String, required: [true, 'must have refreshtoken']},
+    refreshToken: String,
     username: String,
     user: String,
     balance: String,
@@ -24,13 +24,19 @@ EbayAccount.methods.toJSONFor = function (user) {
 };
 
 EbayAccount.methods.request = function(method, uri, params){
-    return request({
-        "method": method,
-        "uri": uri,
-        "json": true,
-        "headers": {
-            "Authorization": "Bearer " + this.accessToken
-        }
+    return new Promise(function(resolve, reject) {
+        request({
+            "method": method,
+            "uri": uri,
+            "json": true,
+            "headers": {
+                "Authorization": "Bearer " + this.accessToken
+            }
+        }).then(function(res){
+            resolve(res);
+        }).catch(function(err){
+            reject(err);
+        })
     })
 };
 
@@ -67,9 +73,7 @@ EbayAccount.methods.getPrivileges = function(){
  * 	https://developer.ebay.com/api-docs/sell/fulfillment/resources/order/methods/getOrders
  */
 EbayAccount.methods.getOrders = function () {
-    this.request("GET", "https://api.ebay.com/sell/fulfillment/v1/order").then(function (res) {
-        return res.body;
-    });
+        this.request("GET", "https://api.ebay.com/sell/fulfillment/v1/order");
 };
 
 mongoose.model('ebayaccount', EbayAccount);
