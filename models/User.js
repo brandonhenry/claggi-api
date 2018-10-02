@@ -8,7 +8,6 @@ var secret = require('../config').secret;
 var UserSchema = new mongoose.Schema({
 	username: {type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/^[a-zA-Z0-9]+$/, 'is invalid'], index: true},
 	email: {type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/\S+@\S+\.\S+/, 'is invalid'], index: true},
-	ebayUsername: String,
 	ebayToken: String,
 	ebayRefreshToken: String,
 	hash: String,
@@ -73,4 +72,4 @@ UserSchema.methods.setEbayUsername = function(username){
 	this.ebayUsername = username;
 };
 
-mongoose.model('User', UserSchema);
+mongoose.model('user', UserSchema);

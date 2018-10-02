@@ -44,6 +44,7 @@ if(isProduction){
 require('./models/User');
 require('./models/Listing');
 require('./models/Order');
+require('./models/EbayAccount');
 passport = require('./config/passport.js');
 
 

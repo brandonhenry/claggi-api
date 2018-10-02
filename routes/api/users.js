@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var router = require('express').Router();
 var passport = require('passport');
-var User = mongoose.model('User');
+var User = mongoose.model('user');
 var auth = require('../auth');
 
 router.post('/users', function (req, res, next) {
@@ -31,7 +31,6 @@ router.get('/users/access', function (req, res, next) {
             }
 
             user.setEbayToken(accessToken, refreshToken);
-            // return res.json({success: 'success', accessToken: accessToken, refreshToken: refreshToken});
             return res.json({user: user.toAuthJSON()});
         }).catch(next);
 
