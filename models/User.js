@@ -65,7 +65,7 @@ UserSchema.methods.setEbayToken = function(token, refreshToken){
 };
 
 UserSchema.methods.getEbayToken = function(){
-	return {accessToken:this.ebayToken, refreshToken:this.refreshToken};
+	return {accessToken:this.ebayToken, refreshToken:this.ebayRefreshToken};
 };
 
 UserSchema.methods.setEbayUsername = function(username){

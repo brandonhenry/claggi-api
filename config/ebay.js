@@ -1,4 +1,5 @@
 var passport = require('passport');
+var refresh = require('passport-oauth2-refresh');
 var mongoose = require('mongoose');
 var User = mongoose.model('user');
 var OAuth2Strategy = require('general-oauth2').Strategy;
@@ -34,4 +35,5 @@ module.exports = function(){
     };
 
     passport.use('oauth2', authStrategy);
+    refresh.use('oauth2', authStrategy);
 };

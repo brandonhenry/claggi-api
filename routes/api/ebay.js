@@ -4,7 +4,7 @@ var User = mongoose.model('user');
 var auth = require('../auth');
 var EbayAccount = mongoose.model('ebayaccount');
 
-router.get('/', auth.required, function (req, res, next) {
+router.post('/', auth.required, function (req, res, next) {
     User.findById(req.payload.id).then(function (user) {
         if (!user.getEbayToken()) {
             return res.status(422).json({errors: 'no ebay tokens have been set'})
@@ -18,9 +18,19 @@ router.get('/', auth.required, function (req, res, next) {
         req.session.ebay = ebayAcc.id;
 
         ebayAcc.save().then(function () {
-            return res.json({eBayAccount: ebayAcc.toJSONFor()});
+            return res.json({eBayAccount: ebayAcc.toAuthJSON()});
         }).catch(next)
     }).catch(next)
+});
+
+router.get('/', auth.required, function (req, res, next) {
+    EbayAccount.findById(req.session.ebay).then(function (ebayAcc) {
+        if (!ebayAcc) {
+            res.status(422).json({errors: "could not find ebay account"})
+        }
+
+        res.json({ebayAccount: ebayAcc.toAuthJSON()})
+    })
 });
 
 router.get('/update', function (req, res, next) {
@@ -35,19 +45,22 @@ router.get('/update', function (req, res, next) {
 });
 
 router.get('/orders', function (req, res, next) {
-    EbayAccount.findById(req.session.ebay).then(function (ebayAcc) {
+    EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
-        ebayAcc.getOrders().then(function(orders){
-            res.json(orders);
-        }).catch(function(err){
-            console.log(err);
-            res.json(err)
-        });
+        return res.json(await ebayAcc.getOrders());
     }).catch(next)
-})
-;
+});
+
+router.get('/privileges', function (req, res, next) {
+    EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
+        if (!ebayAcc) {
+            return res.status(422).json({errors: "no ebay account found"})
+        }
+        return res.json(await ebayAcc.getPrivileges());
+    }).catch(next)
+});
 
 module.exports = router;
 
