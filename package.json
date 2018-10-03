@@ -13,6 +13,7 @@
   },
   "license": "ISC",
   "dependencies": {
+    "apac": "^3.0.2",
     "body-parser": "1.15.0",
     "cors": "2.7.1",
     "ejs": "2.4.1",
@@ -31,6 +32,7 @@
     "passport-local": "1.0.0",
     "passport-oauth2": "^1.4.0",
     "passport-oauth2-refresh": "^1.1.0",
+    "query-string": "^6.2.0",
     "request": "^2.69.0",
     "request-promise": "^4.2.2",
     "simple-oauth2": "^2.2.1",

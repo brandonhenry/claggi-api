@@ -45,4 +45,24 @@ ListingSchema.methods.updatePrice = function(){
 
 };
 
+ListingSchema.methods.setInitialState = function(params){
+	this.source = params.source;
+        this.sourceID = params.sourceID;
+        this.sourcePrice = params.sourcePrice;
+        this.height = params.height;
+        this.width = params.width;
+        this.length = params.length;
+        this.dimensionUnit = params.dimensionUnit;
+        this.weight = params.weight;
+        this.weightUnit = params.weightUnit;
+        this.brand = params.brand;
+        this.description = params.description;
+        this.image = params.image;
+        this.title = params.title;
+        this.mpn = params.mpn;
+        this.upc = params.upc;
+        this.ean = params.ean;
+        this.price = params.price;
+};
+
 mongoose.model('listing', ListingSchema);
