@@ -46,7 +46,7 @@ router.put('/update', function (req, res, next) {
 
 //-----------------------------------------FULFILLMENT-----------------------------------------//
 
-router.get('/orders', function (req, res, next) {
+router.get('/fulfillment/orders', function (req, res, next) {
     EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
@@ -57,7 +57,7 @@ router.get('/orders', function (req, res, next) {
 
 //-------------------------------------------ACCOUNT-------------------------------------------//
 
-router.get('/privileges', function (req, res, next) {
+router.get('/account/privileges', function (req, res, next) {
     EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
@@ -68,7 +68,7 @@ router.get('/privileges', function (req, res, next) {
 
 //-------------------------------------------ANALYTICS-------------------------------------------//
 
-router.get('/getSellerInfo', function (req, res, next) {
+router.get('/analytics/sellerinfo', function (req, res, next) {
     EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
@@ -77,7 +77,7 @@ router.get('/getSellerInfo', function (req, res, next) {
     }).catch(next)
 });
 
-router.get('/getTrafficReport', function (req, res, next) {
+router.get('/analytics/trafficreport', function (req, res, next) {
     EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
@@ -88,7 +88,7 @@ router.get('/getTrafficReport', function (req, res, next) {
 
 //-------------------------------------------INVENTORY-------------------------------------------//
 
-router.get('/getInventory', function (req, res, next) {
+router.get('/inventory/', function (req, res, next) {
     EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
