@@ -1,15 +1,21 @@
 var margin;
 var mongoose = require('mongoose');
-// var Listing = mongoose.model('listing');
+var Listing = mongoose.model('listing');
 
-class Repricer{
-    // setMargin(margin){
-    //     this.margin = margin;
-    // }
-    //
-    // calculate(listing){
-    //     return (listing.getSourcePrice() * this.margin) + listing.getSourcePrice();
-    // }
+class Repricer {
+    setMargin(margin) {
+        this.margin = margin;
+    }
+
+    start() {
+        Listing.find({}).then(function(err, listing){
+           if (err){
+               console.log(err);
+           }
+
+           console.log(listing);
+        })
+    }
 }
 
 module.exports = Repricer;

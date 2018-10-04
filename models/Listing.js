@@ -1,6 +1,5 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
-var Repricer = require('../routes/utils/Repricer');
 // var sku = require('shortid');
 
 var ListingSchema = new mongoose.Schema({
@@ -42,9 +41,8 @@ ListingSchema.methods.getSourcePrice = function(){
 	return this.sourcePrice;
 };
 
-ListingSchema.methods.updatePrice = function(){
-	var repricer = new Repricer();
-	this.price = repricer.calculate(this);
+ListingSchema.methods.updatePrice = function(price){
+	this.price = price;
 };
 
 ListingSchema.methods.setInitialState = function(params){

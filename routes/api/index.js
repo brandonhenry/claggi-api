@@ -6,6 +6,7 @@ router.use('/profiles', require('./profiles'));
 router.use('/orders', require('./orders'));
 router.use('/ebay', require('./ebay'));
 router.use('/source', require('./source'));
+router.use('/repricer', require('./repricer'));
 
 router.use(function(err, req, res, next){
   if (err.name === 'ValidationError'){

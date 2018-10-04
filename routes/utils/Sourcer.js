@@ -55,22 +55,21 @@ class Sourcer {
                     parseString(response.responseBody, // noinspection JSAnnotator
                         async function (err, res) {
                             try {
-                                if (res.ItemSearchResponse && res.ItemSearchResponse.Items[0]){
-                                    console.log(res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0]);
+                                if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]){
                                     let params = {
                                         source: "amazon",
                                         sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0],
                                         title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0].substring(0,78) + '...',
                                         sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice,
-                                        height: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].PackageDimensions[0].Height[0]._,
-                                        width: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].PackageDimensions[0].Width[0]._,
-                                        length: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].PackageDimensions[0].Length[0]._,
-                                        dimensionUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].PackageDimensions[0].Length[0].$.Units,
-                                        weight: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].PackageDimensions[0].Weight[0]._,
-                                        weightUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].PackageDimensions[0].Weight[0].$.Units,
+                                        height: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._,
+                                        width: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._,
+                                        length: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0]._,
+                                        dimensionUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0].$.Units,
+                                        weight: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0]._,
+                                        weightUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0].$.Units,
                                         brand: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Brand[0],
                                         description: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Feature[0] + '\n\n' +
-                                            res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EditorialReviews[0].EditorialReview[0].Content[0],
+                                            res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0],
                                         image: res.ItemSearchResponse.Items[0].Item[0].ImageSets[0].ImageSet[0].HiResImage[0].URL[0],
                                         mpn: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].MPN[0],
                                         ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0]
