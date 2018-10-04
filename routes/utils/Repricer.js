@@ -1,9 +1,10 @@
-
 var mongoose = require('mongoose');
 var Listing = mongoose.model('listing');
 
 class Repricer {
-    static margin;
+    constructor(){
+        this.margin = 0.3;
+    }
 
     /**
      * Main function for repricing items.
@@ -16,7 +17,7 @@ class Repricer {
 
            var sourcePrice = listing.getSourcePrice();
            var currentListingPrice = listing.getListingPrice();
-           var listingPrice = Repricer.calculate(currentListingPrice);
+           var listingPrice = Repricer.calculate(sourcePrice);
 
            if (currentListingPrice !== listingPrice){
                listing.updateListingPrice(listingPrice);
@@ -29,7 +30,7 @@ class Repricer {
      * Sets the margin for marking up the price
      * @param margin
      */
-    static setMargin(margin) {
+    setMargin(margin) {
         this.margin = margin;
     }
 
@@ -37,8 +38,8 @@ class Repricer {
      * Calculates the price that this listing should be on eBay
      * @param price
      */
-    static calculate(price){
-
+    calculate(price){
+        return Math.round((price + (price * this.margin)) * 100 ) / 100;
     }
 }
 

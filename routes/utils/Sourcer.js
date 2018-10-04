@@ -12,6 +12,11 @@ let azAccessKey = 'nT/nJFQVyGJ1kAlbbk2YveBUuPPMhhvApAeeAc4i',
 
 class Sourcer {
 
+    /**
+     * Main function. Scrapes eBay for recently sold products and then checks to see if Amazon has those products.
+     * Creates Listing models for any products found.
+     * @returns {Promise<void>}
+     */
     async scrape() {
         try {
             let ebay = new EbayAPI();
@@ -32,6 +37,11 @@ class Sourcer {
         }
     }
 
+    /**
+     * Takes an ebay listing title and searches Amazon to see if that item is available on Amazon.
+     * @param title ebay recently sold listing title
+     * @returns {Promise<any>}
+     */
     findAmazonProduct(title) {
         let parseString = require('xml2js').parseString;
         if (title === undefined) {
@@ -55,11 +65,11 @@ class Sourcer {
                     parseString(response.responseBody, // noinspection JSAnnotator
                         async function (err, res) {
                             try {
-                                if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]){
+                                if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]) {
                                     let params = {
                                         source: "amazon",
                                         sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0],
-                                        title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0].substring(0,78) + '...',
+                                        title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0].substring(0, 78) + '...',
                                         sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice,
                                         height: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._,
                                         width: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._,
@@ -94,6 +104,12 @@ class Sourcer {
         }
     }
 
+    /**
+     * Searches eBay for all recenlty sold items. Searches 5 pages with 100 results on each page.
+     * @param ebay object containing ebay endpoint urls
+     * @param pageNumber current pagination number
+     * @returns {Promise<*>}
+     */
     async findEbayProducts(ebay, pageNumber) {
         var source = this;
         return new Promise(function (resolve, reject) {
