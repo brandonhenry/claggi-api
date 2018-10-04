@@ -19,6 +19,8 @@ var OrderSchema = new mongoose.Schema({
     buyNowPrice: String,
     quantity: Number,
     paymentStatus: String,
+    trackingNumber: String,
+    trackingCarrier: String,
     ordered: Boolean
 });
 

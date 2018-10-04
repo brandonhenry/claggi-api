@@ -37,7 +37,7 @@ module.exports = class EbayAPI{
 
     buildEbayEndpoint(){
         let ebayEndpoint = [];
-        let pages = 5;
+        let pages = 1;
 
         for (let pageNumber = 1; pageNumber <= pages; pageNumber++){
             for (let j = 1; j <= this.globalCategoryList.length; j++){
@@ -73,11 +73,6 @@ module.exports = class EbayAPI{
                     + this.noCors);
             }
         }
-
         return ebayEndpoint;
     };
-
-    get categoryList(){
-        return this.globalCategoryList;
-    }
 };

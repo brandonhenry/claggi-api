@@ -1,12 +1,13 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
+var Repricer = require('../routes/utils/Repricer');
 // var sku = require('shortid');
 
 var ListingSchema = new mongoose.Schema({
 	 listingNumber: String,
 	 itemSKU: String,
 	 source: String,
-	 sourceID: String,
+	 sourceID: {type: String, unique: true},
 	 sourcePrice: String,
 	 repriceMargin: String,
 	 availability: String,
@@ -37,12 +38,13 @@ ListingSchema.methods.generateSKU = function(){
 	this.itemSKU = "";
 };
 
-ListingSchema.methods.calculatePrice = function(){
-
+ListingSchema.methods.getSourcePrice = function(){
+	return this.sourcePrice;
 };
 
 ListingSchema.methods.updatePrice = function(){
-
+	var repricer = new Repricer();
+	this.price = repricer.calculate(this);
 };
 
 ListingSchema.methods.setInitialState = function(params){
@@ -60,9 +62,7 @@ ListingSchema.methods.setInitialState = function(params){
         this.image = params.image;
         this.title = params.title;
         this.mpn = params.mpn;
-        this.upc = params.upc;
         this.ean = params.ean;
-        this.price = params.price;
 };
 
 mongoose.model('listing', ListingSchema);
