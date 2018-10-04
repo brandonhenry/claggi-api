@@ -41,7 +41,11 @@ ListingSchema.methods.getSourcePrice = function(){
 	return this.sourcePrice;
 };
 
-ListingSchema.methods.updatePrice = function(price){
+ListingSchema.methods.getListingPrice = function(){
+    return this.price;
+};
+
+ListingSchema.methods.updateListingPrice = function(price){
 	this.price = price;
 };
 
