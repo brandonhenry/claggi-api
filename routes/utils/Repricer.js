@@ -10,19 +10,21 @@ class Repricer {
      * Main function for repricing items.
      */
     start() {
-        Listing.find({}).then(function(err, listing){
+        Listing.find({}).then(async function(err, listing){
            if (err){
                console.log(err);
            }
 
            var sourcePrice = listing.getSourcePrice();
            var currentListingPrice = listing.getListingPrice();
-           var listingPrice = Repricer.calculate(sourcePrice);
-
+           var listingPrice = await this.calculate(sourcePrice);
+           console.log(listingPrice);
            if (currentListingPrice !== listingPrice){
                listing.updateListingPrice(listingPrice);
            }
            console.log(listing);
+
+            listing.save();
         })
     }
 
@@ -39,7 +41,9 @@ class Repricer {
      * @param price
      */
     calculate(price){
-        return Math.round((price + (price * this.margin)) * 100 ) / 100;
+        return new Promise(function(resolve, reject){
+            resolve(Math.round((price + (price * this.margin)) * 100 ) / 100);
+        });
     }
 }
 

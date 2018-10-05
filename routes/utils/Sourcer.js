@@ -70,7 +70,7 @@ class Sourcer {
                                         source: "amazon",
                                         sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0],
                                         title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0].substring(0, 78) + '...',
-                                        sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice,
+                                        sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice[0],
                                         height: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._,
                                         width: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._,
                                         length: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0]._,
