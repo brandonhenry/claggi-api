@@ -84,10 +84,11 @@ class Sourcer {
                                         mpn: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].MPN[0],
                                         ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0]
                                     };
-                                    console.log(params);
+
                                     var listing = new Listing();
                                     listing.setInitialState(params);
                                     listing.save();
+                                    console.log(listing);
                                 } else {
                                     resolve(undefined);
                                 }

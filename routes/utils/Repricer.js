@@ -10,22 +10,25 @@ class Repricer {
      * Main function for repricing items.
      */
     start() {
-        Listing.find({}).then(async function(err, listing){
-           if (err){
-               console.log(err);
+        var repricer = this;
+        Listing.find({}).then(async function(listing){
+           if (!listing){
+               console.log('error');
            }
 
+           listing.each(function(item){
+               var sourcePrice = item.getSourcePrice();
+               console.log(sourcePrice);
+           });
            var sourcePrice = listing.getSourcePrice();
            var currentListingPrice = listing.getListingPrice();
-           var listingPrice = await this.calculate(sourcePrice);
-           console.log(listingPrice);
+           var listingPrice = await repricer.calculate(sourcePrice);
+
            if (currentListingPrice !== listingPrice){
                listing.updateListingPrice(listingPrice);
            }
-           console.log(listing);
-
             listing.save();
-        })
+        }).catch()
     }
 
     /**

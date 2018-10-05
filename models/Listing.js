@@ -1,13 +1,13 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
-// var sku = require('shortid');
+var sku = require('shortid');
 
 var ListingSchema = new mongoose.Schema({
 	 listingNumber: String,
 	 itemSKU: String,
 	 source: String,
 	 sourceID: {type: String, unique: true},
-	 sourcePrice: String,
+	 sourcePrice: {type: Number, min: 11},
 	 repriceMargin: String,
 	 availability: String,
 	 quantity: Number,
@@ -27,15 +27,11 @@ var ListingSchema = new mongoose.Schema({
 	 paymentPolicy: String,
 	 returnPolicy: String,
 	 shippingPolicy: String,
-	 price: String,
+	 price: Number,
 	 profit: String
 }, {timestamp: true});
 
 ListingSchema.plugin(uniqueValidator, {message: 'listing already exists'});
-
-ListingSchema.methods.generateSKU = function(){
-	this.itemSKU = "";
-};
 
 ListingSchema.methods.getSourcePrice = function(){
 	return this.sourcePrice;
@@ -52,13 +48,14 @@ ListingSchema.methods.updateListingPrice = function(price){
 ListingSchema.methods.setInitialState = function(params){
 	this.source = params.source;
         this.sourceID = params.sourceID;
+        this.itemSKU = sku.generate();
         this.sourcePrice = params.sourcePrice.replace('$','');
-        this.height = params.height;
-        this.width = params.width;
-        this.length = params.length;
-        this.dimensionUnit = params.dimensionUnit;
-        this.weight = params.weight;
-        this.weightUnit = params.weightUnit;
+        this.height = (params.height / 100).toFixed(2);
+        this.width = (params.width / 100).toFixed(2);
+        this.length = (params.length / 100).toFixed(2);
+        this.dimensionUnit = params.dimensionUnit.split('-')[1];
+        this.weight = (params.weight / 100).toFixed(2);
+        this.weightUnit = params.weightUnit.split(' ')[1];
         this.brand = params.brand;
         this.description = params.description;
         this.image = params.image;
