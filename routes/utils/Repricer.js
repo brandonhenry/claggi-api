@@ -11,23 +11,28 @@ class Repricer {
      */
     start() {
         var repricer = this;
-        Listing.find({}).then(async function(listing){
+        Listing.find({}).then(function(listing){
            if (!listing){
                console.log('error');
            }
 
-           listing.each(function(item){
-               var sourcePrice = item.getSourcePrice();
-               console.log(sourcePrice);
-           });
-           var sourcePrice = listing.getSourcePrice();
-           var currentListingPrice = listing.getListingPrice();
-           var listingPrice = await repricer.calculate(sourcePrice);
+           listing.forEach(async function(item){
+               if (!item.errors){
+                   var sourcePrice = item.getSourcePrice();
+                   var currentListingPrice = item.getListingPrice() || 1;
 
-           if (currentListingPrice !== listingPrice){
-               listing.updateListingPrice(listingPrice);
-           }
-            listing.save();
+                   if (sourcePrice && currentListingPrice){
+                       var listingPrice = await repricer.calculate(sourcePrice);
+
+                       if (currentListingPrice !== listingPrice){
+                           item.updateListingPrice(listingPrice);
+                       }
+                   }
+
+                   item.save();
+                   console.log(item.toAuthJSON());
+               }
+           });
         }).catch()
     }
 
@@ -44,8 +49,9 @@ class Repricer {
      * @param price
      */
     calculate(price){
+        var repricer = this;
         return new Promise(function(resolve, reject){
-            resolve(Math.round((price + (price * this.margin)) * 100 ) / 100);
+            resolve(Math.round((price + (price * repricer.margin)) * 100 ) / 100);
         });
     }
 }

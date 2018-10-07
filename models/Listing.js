@@ -33,6 +33,13 @@ var ListingSchema = new mongoose.Schema({
 
 ListingSchema.plugin(uniqueValidator, {message: 'listing already exists'});
 
+ListingSchema.methods.toAuthJSON = function(){
+	return {
+		sourcePrice: this.sourcePrice,
+		price: this.price,
+		id: this.sourceID
+	}
+};
 ListingSchema.methods.getSourcePrice = function(){
 	return this.sourcePrice;
 };
