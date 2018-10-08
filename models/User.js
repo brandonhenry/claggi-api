@@ -11,7 +11,7 @@ var UserSchema = new mongoose.Schema({
 	ebayToken: String,
 	ebayRefreshToken: String,
 	hash: String,
-	salt: String
+	salt: String,
 }, {timestamps: true});
 
 UserSchema.plugin(uniqueValidator, {message: 'is already taken'});

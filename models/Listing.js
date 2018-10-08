@@ -21,7 +21,7 @@ var ListingSchema = new mongoose.Schema({
 	 weightUnit: String,
 	 brand: String,
 	 description: String,
-    categoryId: Number,
+    categoryId: String,
 	 image: String,
 	 title: String,
 	 mpn: String,
@@ -30,6 +30,7 @@ var ListingSchema = new mongoose.Schema({
 	 paymentPolicy: String,
 	 returnPolicy: String,
 	 shippingPolicy: String,
+    fulfillmentPolicy: String,
 	 price: Number,
 	 profit: String,
     ebayAccount: EbayAccount
@@ -81,6 +82,34 @@ ListingSchema.methods.setInitialState = function(params){
 ListingSchema.methods.configure = function(params){
     this.quantity = params.quantity;
 
+};
+
+ListingSchema.methods.toRequestPayload = function(description){
+    return {
+        /* EbayOfferDetailsWithKeys */
+        "availableQuantity" : this.quantity,
+        "categoryId" : this.categoryId,
+        "listingDescription" : description,
+        "listingPolicies" :
+        { /* ListingPolicies */
+            "paymentPolicyId" : this.paymentPolicy,
+            "returnPolicyId" : this.returnPolicy,
+            "fulfillmentPolicyId" : this.fulfillmentPolicy,
+        },
+        "merchantLocationKey" : "string",
+        "pricingSummary" :
+        { /* PricingSummary */
+            "price" :
+            { /* Amount */
+                "value" : this.price,
+                "currency" : "USD"
+            }
+        },
+        "quantityLimitPerBuyer" : 3,
+        "sku" : this.itemSKU,
+        "marketplaceId" : "EBAY_US",
+        "format" : "FIXED_PRICE"
+    }
 };
 
 var getCategory = function(title){

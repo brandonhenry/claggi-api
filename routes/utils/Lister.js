@@ -17,14 +17,9 @@ class Lister {
         var i = this;
         //title.substring(0, 78) + '...'
         Listing.find({}).then(function(listing){
-            listing.each(function(item){
+            listing.each(async function(item){
                 if (!i.isDuplicate(item)){
-                    var options = {
-                        title: item.getTitle(),
-                        price: item.getListingPrice(),
-                        description: i.getDescription(listing)
-                    };
-                    i.ebayAccount.createOffer(options);
+                    await i.ebayAccount.createOffer(await item.toRequestPayload()).catch();
                 }
             })
         }).catch();

@@ -31,6 +31,10 @@ EbayAccount.methods.setAccessToken = function(accessToken){
 EbayAccount.methods.request = function(method, uri, params){
     var token = this.accessToken;
     var ebayAccount = this;
+    var options = {};
+    if (params){
+        options = params;
+    }
     return new Promise(function(resolve, reject){
         request({
             "method": method,
@@ -38,7 +42,8 @@ EbayAccount.methods.request = function(method, uri, params){
             "json": true,
             "headers": {
                 "Authorization": "Bearer " + token
-            }
+            },
+            "body": options
         }).then(function(res){
             resolve(res);
         }).catch(function(err){
@@ -123,8 +128,8 @@ EbayAccount.methods.getInventoryItems = async function () {
  *
  * https://developer.ebay.com/api-docs/sell/inventory/resources/offer/methods/createOffer
  */
-EbayAccount.methods.createOffer = async function (options) {
-    return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer", options);
+EbayAccount.methods.createOffer = async function (payload) {
+    return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer", payload);
 };
 
 /**
