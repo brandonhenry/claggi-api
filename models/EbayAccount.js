@@ -143,6 +143,16 @@ EbayAccount.methods.updateOffer = async function (productID) {
 };
 
 /**
+ * This call is used to convert an unpublished offer into a published offer, or live eBay listing.
+ * The unique identifier of the offer (offerId) is passed in at the end of the call URI.
+ *
+ * https://developer.ebay.com/api-docs/sell/inventory/resources/offer/methods/publishOffer
+ */
+EbayAccount.methods.publishOffer = async function (productID) {
+    return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer/" + productID);
+};
+
+/**
  * This call is used to retrieve the expected listing fees for up to 250 unpublished offers.
  *
  * https://developer.ebay.com/api-docs/sell/inventory/resources/offer/methods/getListingFees
