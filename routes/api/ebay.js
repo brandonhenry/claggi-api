@@ -15,6 +15,7 @@ router.post('/', auth.required, function (req, res, next) {
 
         ebayAcc.accessToken = token.accessToken;
         ebayAcc.refreshToken = token.refreshToken;
+        ebayAcc.username = user.getUsername();
         req.session.ebay = ebayAcc.id;
 
         ebayAcc.save().then(function () {
