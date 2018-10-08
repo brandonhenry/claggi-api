@@ -3,7 +3,7 @@ var uniqueValidator = require('mongoose-unique-validator');
 var sku = require('shortid');
 var request = require('request-promise');
 var EbayAccount = mongoose.model('ebayaccount');
-var genDesc = require('./Description');
+var genDesc = require('../routes/utils/Description');
 
 var ListingSchema = new mongoose.Schema({
 	 listingNumber: String,
@@ -34,7 +34,7 @@ var ListingSchema = new mongoose.Schema({
     fulfillmentPolicy: String,
 	 price: Number,
 	 profit: String,
-    ebayAccount: EbayAccount
+    ebayAccount: [EbayAccount]
 }, {timestamp: true});
 
 ListingSchema.plugin(uniqueValidator, {message: 'listing already exists'});

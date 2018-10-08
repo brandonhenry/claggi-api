@@ -39,6 +39,10 @@ UserSchema.methods.generateJWT = function(){
 	}, secret)
 };
 
+UserSchema.methods.getUsername = function(){
+	return this.username;
+};
+
 UserSchema.methods.toAuthJSON = function(){
 	return {
 		username: this.username,

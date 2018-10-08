@@ -35,7 +35,7 @@ class AmazonBot {
                 await i.page.waitForSelector('.abnav-accountfor').then(function () {
                     loggedIn = true;
                 }).catch();
-            } catch {
+            } catch (err) {
                 // do nothing
             }
 

@@ -42,9 +42,9 @@ if(isProduction){
 }
 
 require('./models/User');
+require('./models/EbayAccount');
 require('./models/Listing');
 require('./models/Order');
-require('./models/EbayAccount');
 passport = require('./config/passport.js');
 
 passport(app);

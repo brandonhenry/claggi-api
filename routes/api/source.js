@@ -7,11 +7,13 @@ var router = require('express').Router();
 var EbayAccount = mongoose.model('ebayaccount');
 
 router.get('/', function(req, res, next){
-    EbayAccount.find({user:user}).then(function(account){
-        var sourcer = new Sourcer(account);
-        sourcer.scrape();
+    EbayAccount.find({user:'claggi'}).then(function(account){
+        account.forEach(function(acc){
+            var sourcer = new Sourcer(acc);
+            sourcer.scrape();
+        });
         res.json({message:'success'});
-    })
+    }).catch();
 });
 
 module.exports = router;
