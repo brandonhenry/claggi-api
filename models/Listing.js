@@ -40,6 +40,7 @@ ListingSchema.methods.toAuthJSON = function(){
 		id: this.sourceID
 	}
 };
+
 ListingSchema.methods.getSourcePrice = function(){
 	return this.sourcePrice;
 };
