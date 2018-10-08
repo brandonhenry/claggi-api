@@ -123,8 +123,8 @@ EbayAccount.methods.getInventoryItems = async function () {
  *
  * https://developer.ebay.com/api-docs/sell/inventory/resources/offer/methods/createOffer
  */
-EbayAccount.methods.createOffer = async function () {
-    return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer");
+EbayAccount.methods.createOffer = async function (options) {
+    return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer", options);
 };
 
 /**

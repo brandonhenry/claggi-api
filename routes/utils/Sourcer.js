@@ -12,6 +12,10 @@ let azAccessKey = 'nT/nJFQVyGJ1kAlbbk2YveBUuPPMhhvApAeeAc4i',
 
 class Sourcer {
 
+    constructor(ebayAccount){
+        this.ebayAccount = ebayAccount;
+    }
+
     /**
      * Main function. Scrapes eBay for recently sold products and then checks to see if Amazon has those products.
      * Creates Listing models for any products found.
@@ -43,6 +47,7 @@ class Sourcer {
      * @returns {Promise<any>}
      */
     findAmazonProduct(title) {
+        var i = this;
         let parseString = require('xml2js').parseString;
         if (title === undefined) {
             return new Promise(function (resolve, reject) {
@@ -68,6 +73,7 @@ class Sourcer {
                                 if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]) {
                                     let params = {
                                         source: "amazon",
+                                        ebayAccount: i.ebayAccount,
                                         sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0],
                                         title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0],
                                         sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice[0],
