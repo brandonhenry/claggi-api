@@ -8,9 +8,12 @@ var AmazonBot = require('../utils/AmazonBot');
 var amazon = new AmazonBot();
 
 router.get('/', function(req, res, next){
-    amazon.login('#', '#').then(function(results){
-        res.json({message: results});
-    }).catch(next);
+    amazon.login('claggiebay@gmail.com', 'iloveJesus210').then({
+    }).catch(next).then(function(){
+        amazon.addToCart('B0029U2IOK', 1).then(function(result){
+            res.json({message: result})
+        }).catch()
+    });
 });
 
 module.exports = router;
