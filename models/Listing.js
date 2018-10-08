@@ -3,6 +3,7 @@ var uniqueValidator = require('mongoose-unique-validator');
 var sku = require('shortid');
 var request = require('request-promise');
 var EbayAccount = mongoose.model('ebayaccount');
+var genDesc = require('./Description');
 
 var ListingSchema = new mongoose.Schema({
 	 listingNumber: String,
@@ -54,8 +55,20 @@ ListingSchema.methods.getListingPrice = function(){
     return this.price;
 };
 
+ListingSchema.methods.getImage = function(){
+    return this.image;
+};
+
+ListingSchema.methods.canList = function(){
+    return (this.ebayAccount && this.price)
+};
+
 ListingSchema.methods.updateListingPrice = function(price){
 	this.price = price;
+};
+
+ListingSchema.methods.formatDescription = function(){
+    return genDesc(this);
 };
 
 ListingSchema.methods.setInitialState = function(params){
@@ -84,12 +97,24 @@ ListingSchema.methods.configure = function(params){
 
 };
 
-ListingSchema.methods.toRequestPayload = function(description){
+ListingSchema.methods.getProductDescription = function(){
+    return this.description;
+};
+
+ListingSchema.methods.getProductDetails = function(){
+    var productDetails = '';
+    this.productDetails.each(function(detail){
+        productDetails += `<li>${detail}</li>\n`
+    });
+    return productDetails;
+};
+
+ListingSchema.methods.toRequestPayload = function(){
     return {
         /* EbayOfferDetailsWithKeys */
         "availableQuantity" : this.quantity,
         "categoryId" : this.categoryId,
-        "listingDescription" : description,
+        "listingDescription" : this.formatDescription(),
         "listingPolicies" :
         { /* ListingPolicies */
             "paymentPolicyId" : this.paymentPolicy,

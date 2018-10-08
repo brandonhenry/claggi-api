@@ -1,4 +1,4 @@
-var generateDescription = require('./Description');
+
 var mongoose = require('mongoose');
 var Listing = mongoose.model('listing');
 
@@ -18,7 +18,7 @@ class Lister {
         //title.substring(0, 78) + '...'
         Listing.find({}).then(function(listing){
             listing.each(async function(item){
-                if (!i.isDuplicate(item)){
+                if (!i.isDuplicate(item) && item.canList()){
                     await i.ebayAccount.createOffer(await item.toRequestPayload()).catch();
                 }
             })
@@ -27,10 +27,6 @@ class Lister {
 
     stop(){
 
-    }
-
-    getDescription(listing){
-        return generateDescription(listing);
     }
 
     isDuplicate(unpubListing){

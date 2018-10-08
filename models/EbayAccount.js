@@ -28,6 +28,10 @@ EbayAccount.methods.setAccessToken = function(accessToken){
     this.accessToken = accessToken;
 };
 
+EbayAccount.methods.getAccessToken = function(){
+    return this.accessToken;
+};
+
 EbayAccount.methods.request = function(method, uri, params){
     var token = this.accessToken;
     var ebayAccount = this;
