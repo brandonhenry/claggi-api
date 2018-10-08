@@ -1,7 +1,6 @@
 var generate = function(listing){
     //if (shortDescription.includes('.com'){this.removeURL(shortDescription)};
-    return`
-    <title></title>
+    return `<title></title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="&quot;IE=edge&quot;">
 <meta name="viewport" content="&quot;width=device-width," initial-scale="1&quot;">
@@ -73,9 +72,8 @@ var generate = function(listing){
                                 <div class="data-table">
                                     <h2>Specification</h2>
                                     <div style="padding: 0px 10px;">
-                                        <ul class="specs">{{#product_details}}
-                                            <li>{{.}}</li>
-                                            {{/product_details}}
+                                        <ul class="specs">
+                                        ${listing.getProductDetails()}
                                         </ul>
                                     </div>
                                 </div>
@@ -88,9 +86,8 @@ var generate = function(listing){
                                     <h2>Item Description</h2>
                                 </div>
                                 <p class="styled">&nbsp;</p>
-                                <div class="description" style="">{{{product_description}}}
-                                    <div class="speclist"><br>{{#feature_bullets}}
-                                        <li>{{.}}</li>{{/feature_bullets}}</div>
+                                <div class="description" style="">${listing.getProductDescription()}
+                                    <div class="speclist"><br>${listing.getProductDetails()}</div>
                                 </div>
                                 <p>&nbsp;</p>
                             </div>
