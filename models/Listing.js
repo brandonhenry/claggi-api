@@ -21,6 +21,7 @@ var ListingSchema = new mongoose.Schema({
 	 weightUnit: String,
 	 brand: String,
 	 description: String,
+    categoryId: Number,
 	 image: String,
 	 title: String,
 	 mpn: String,
@@ -72,6 +73,7 @@ ListingSchema.methods.setInitialState = function(params){
         this.description = params.description;
         this.image = params.image;
         this.title = params.title;
+        this.categoryId = getCategory(this.title);
         this.mpn = params.mpn;
         this.ean = params.ean;
 };
@@ -93,9 +95,19 @@ var getCategory = function(title){
         }
     }).then(function(res){
         var categoryTreeID = res.categoryTreeID;
-        
-    })
+        var uri = 'https://api.ebay.com/commerce/taxonomy/v1_beta/category_tree/'
+            + categoryTreeID
+            + '/get_category_suggestions?q='
+            + title;
 
-}
+        request({
+            "method": 'GET',
+            "uri": uri,
+            "json": true
+        }). then(function(results){
+            return results.categorySuggestions[0].category.categoryId;
+        }).catch()
+    }).catch()
+};
 
 mongoose.model('listing', ListingSchema);
