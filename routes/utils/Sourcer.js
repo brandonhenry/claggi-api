@@ -13,7 +13,7 @@ let azAccessKey = 'nT/nJFQVyGJ1kAlbbk2YveBUuPPMhhvApAeeAc4i',
 class Sourcer {
 
     constructor(ebayAccount){
-        this.ebayAccount = ebayAccount;
+        this.ebayAccount = ebayAccount._parent;
     }
 
     /**

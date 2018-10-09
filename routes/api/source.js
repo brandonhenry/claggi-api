@@ -5,14 +5,17 @@ var User = mongoose.model('user');
 var Listing = mongoose.model('listing');
 var router = require('express').Router();
 var EbayAccount = mongoose.model('ebayaccount');
+var auth = require('../auth');
 
-router.get('/', function(req, res, next){
-    EbayAccount.find({user:'claggi'}).then(function(account){
-        account.forEach(function(acc){
-            var sourcer = new Sourcer(acc);
-            sourcer.scrape();
-        });
-        res.json({message:'success'});
+router.get('/', auth.required, function (req, res, next) {
+    User.findById(req.payload.id).then(function (user) {
+        if (!user.getEbayToken()) {
+            return res.status(422).json({errors: 'no ebay tokens have been set'})
+        }
+
+        var sourcer = new Sourcer(user.getEbayAccount());
+        sourcer.scrape();
+        res.json({message: 'success'});
     }).catch();
 });
 

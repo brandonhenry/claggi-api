@@ -3,6 +3,7 @@ var uniqueValidator = require('mongoose-unique-validator');
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 var secret = require('../config').secret;
+var EbayAccount = mongoose.model('ebayaccount');
 
 
 var UserSchema = new mongoose.Schema({
@@ -10,6 +11,7 @@ var UserSchema = new mongoose.Schema({
 	email: {type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/\S+@\S+\.\S+/, 'is invalid'], index: true},
 	ebayToken: String,
 	ebayRefreshToken: String,
+	ebayAccount: [EbayAccount],
 	hash: String,
 	salt: String,
 }, {timestamps: true});
@@ -72,8 +74,12 @@ UserSchema.methods.getEbayToken = function(){
 	return {accessToken:this.ebayToken, refreshToken:this.ebayRefreshToken};
 };
 
-UserSchema.methods.setEbayUsername = function(username){
-	this.ebayUsername = username;
+UserSchema.methods.setEbayAccount = function(account){
+	this.ebayAccount = account;
+};
+
+UserSchema.methods.getEbayAccount = function(){
+	return this.ebayAccount;
 };
 
 mongoose.model('user', UserSchema);

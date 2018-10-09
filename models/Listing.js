@@ -2,152 +2,157 @@ var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 var sku = require('shortid');
 var request = require('request-promise');
+var User = mongoose.model('user');
 var EbayAccount = mongoose.model('ebayaccount');
 var genDesc = require('../routes/utils/Description');
 
 var ListingSchema = new mongoose.Schema({
-	 listingNumber: String,
-	 itemSKU: String,
-	 source: String,
-	 sourceID: {type: String, unique: true},
-	 sourcePrice: {type: Number, min: 11},
-	 repriceMargin: String,
-	 availability: String,
-	 quantity: Number,
-	 height: Number,
-	 width: Number,
-	 length: Number,
-	 dimensionUnit: String,
-	 weight: Number,
-	 weightUnit: String,
-	 brand: String,
-	 description: String,
+    listingNumber: String,
+    itemSKU: String,
+    source: String,
+    sourceID: {type: String, unique: true},
+    sourcePrice: {type: Number, min: 11},
+    repriceMargin: String,
+    availability: String,
+    quantity: Number,
+    height: Number,
+    width: Number,
+    length: Number,
+    dimensionUnit: String,
+    weight: Number,
+    weightUnit: String,
+    brand: String,
+    description: String,
     categoryId: String,
-	 image: String,
-	 title: String,
-	 mpn: String,
-	 upc: String,
-	 ean: String,
-	 paymentPolicy: String,
-	 returnPolicy: String,
-	 shippingPolicy: String,
+    image: String,
+    title: String,
+    mpn: String,
+    upc: String,
+    ean: String,
+    paymentPolicy: String,
+    returnPolicy: String,
+    shippingPolicy: String,
     fulfillmentPolicy: String,
-	 price: Number,
-	 profit: String,
-    ebayAccount: [EbayAccount]
+    user: [User],
+    ebayAccount: [EbayAccount],
+    listingId: String,
+    price: Number,
+    profit: String
 }, {timestamp: true});
 
 ListingSchema.plugin(uniqueValidator, {message: 'listing already exists'});
 
-ListingSchema.methods.toAuthJSON = function(){
-	return {
-		sourcePrice: this.sourcePrice,
-		price: this.price,
-		id: this.sourceID
-	}
+ListingSchema.methods.toAuthJSON = function () {
+    return {
+        sourcePrice: this.sourcePrice,
+        price: this.price,
+        id: this.sourceID
+    }
 };
 
-ListingSchema.methods.getSourcePrice = function(){
-	return this.sourcePrice;
+ListingSchema.methods.getSourcePrice = function () {
+    return this.sourcePrice;
 };
 
-ListingSchema.methods.getListingPrice = function(){
+ListingSchema.methods.getListingPrice = function () {
     return this.price;
 };
 
-ListingSchema.methods.getImage = function(){
+ListingSchema.methods.getImage = function () {
     return this.image;
 };
 
-ListingSchema.methods.canList = function(){
+ListingSchema.methods.canList = function () {
     return (this.ebayAccount && this.price)
 };
 
-ListingSchema.methods.updateListingPrice = function(price){
-	this.price = price;
+ListingSchema.methods.updateListingPrice = function (price) {
+    this.price = price;
 };
 
-ListingSchema.methods.formatDescription = function(){
+ListingSchema.methods.formatDescription = function () {
     return genDesc(this);
 };
 
-ListingSchema.methods.setInitialState = function(params){
-	this.source = params.source;
-        this.sourceID = params.sourceID;
-        this.itemSKU = sku.generate();
-        this.ebayAccount = params.ebayAccount;
-        this.sourcePrice = params.sourcePrice.replace('$','');
-        this.height = (params.height / 100).toFixed(2);
-        this.width = (params.width / 100).toFixed(2);
-        this.length = (params.length / 100).toFixed(2);
-        this.dimensionUnit = params.dimensionUnit.split('-')[1];
-        this.weight = (params.weight / 100).toFixed(2);
-        this.weightUnit = params.weightUnit.split(' ')[1];
-        this.brand = params.brand;
-        this.description = params.description;
-        this.image = params.image;
-        this.title = params.title;
-        this.categoryId = getCategory(this.title);
-        this.mpn = params.mpn;
-        this.ean = params.ean;
+ListingSchema.methods.setInitialState = function (params) {
+    this.source = params.source;
+    this.sourceID = params.sourceID;
+    this.itemSKU = sku.generate();
+    this.ebayAccount = params.ebayAccount;
+    this.sourcePrice = params.sourcePrice.replace('$', '');
+    this.height = (params.height / 100).toFixed(2);
+    this.width = (params.width / 100).toFixed(2);
+    this.length = (params.length / 100).toFixed(2);
+    this.dimensionUnit = params.dimensionUnit.split('-')[1];
+    this.weight = (params.weight / 100).toFixed(2);
+    this.weightUnit = params.weightUnit.split(' ')[1];
+    this.brand = params.brand;
+    this.description = params.description;
+    this.image = params.image;
+    this.title = params.title;
+    this.categoryId = getCategory(this.title);
+    this.mpn = params.mpn;
+    this.ean = params.ean;
 };
 
-ListingSchema.methods.configure = function(params){
+ListingSchema.methods.configure = function (params) {
     this.quantity = params.quantity;
-
 };
 
-ListingSchema.methods.getProductDescription = function(){
+ListingSchema.methods.getProductDescription = function () {
     return this.description;
 };
 
-ListingSchema.methods.getProductDetails = function(){
+ListingSchema.methods.getProductDetails = function () {
     var productDetails = '';
-    this.productDetails.each(function(detail){
+    this.productDetails.each(function (detail) {
         productDetails += `<li>${detail}</li>\n`
     });
     return productDetails;
 };
 
-ListingSchema.methods.toRequestPayload = function(){
+ListingSchema.methods.toRequestPayload = function () {
     return {
         /* EbayOfferDetailsWithKeys */
-        "availableQuantity" : this.quantity,
-        "categoryId" : this.categoryId,
-        "listingDescription" : this.formatDescription(),
-        "listingPolicies" :
-        { /* ListingPolicies */
-            "paymentPolicyId" : this.paymentPolicy,
-            "returnPolicyId" : this.returnPolicy,
-            "fulfillmentPolicyId" : this.fulfillmentPolicy,
-        },
-        "merchantLocationKey" : "string",
-        "pricingSummary" :
-        { /* PricingSummary */
-            "price" :
-            { /* Amount */
-                "value" : this.price,
-                "currency" : "USD"
-            }
-        },
-        "quantityLimitPerBuyer" : 3,
-        "sku" : this.itemSKU,
-        "marketplaceId" : "EBAY_US",
-        "format" : "FIXED_PRICE"
+        "availableQuantity": this.quantity,
+        "categoryId": this.categoryId,
+        "listingDescription": this.formatDescription(),
+        "listingPolicies":
+            {
+                /* ListingPolicies */
+                "paymentPolicyId": this.paymentPolicy,
+                "returnPolicyId": this.returnPolicy,
+                "fulfillmentPolicyId": this.fulfillmentPolicy,
+            },
+        "merchantLocationKey": "string",
+        "pricingSummary":
+            {
+                /* PricingSummary */
+                "price":
+                    {
+                        /* Amount */
+                        "value": this.price,
+                        "currency": "USD"
+                    }
+            },
+        "quantityLimitPerBuyer": 3,
+        "sku": this.itemSKU,
+        "marketplaceId": "EBAY_US",
+        "format": "FIXED_PRICE"
     }
 };
 
-var getCategory = function(title){
+var getCategory = function (title) {
     var token = this.ebayAccount.getAccessToken();
     request({
         "method": 'GET',
         "uri": 'https://api.ebay.com/commerce/taxonomy/v1_beta/get_default_category_tree_id?\n' +
-            'marketplace_id=EBAY_US',
+        'marketplace_id=EBAY_US',
         "json": true,
         "headers": {
             "Authorization": "Bearer " + token
         }
-    }).then(function(res){
+    }).then(function (res) {
         var categoryTreeID = res.categoryTreeID;
         var uri = 'https://api.ebay.com/commerce/taxonomy/v1_beta/category_tree/'
             + categoryTreeID
@@ -158,7 +163,7 @@ var getCategory = function(title){
             "method": 'GET',
             "uri": uri,
             "json": true
-        }). then(function(results){
+        }).then(function (results) {
             return results.categorySuggestions[0].category.categoryId;
         }).catch()
     }).catch()

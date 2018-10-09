@@ -19,6 +19,7 @@ router.post('/', auth.required, function (req, res, next) {
         req.session.ebay = ebayAcc.id;
 
         ebayAcc.save().then(function () {
+            user.setEbayAccount(ebayAcc);
             return res.json({eBayAccount: ebayAcc.toAuthJSON()});
         }).catch(next)
     }).catch(next)

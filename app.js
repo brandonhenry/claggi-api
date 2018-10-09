@@ -41,8 +41,8 @@ if(isProduction){
   mongoose.set('debug', true);
 }
 
-require('./models/User');
 require('./models/EbayAccount');
+require('./models/User');
 require('./models/Listing');
 require('./models/Order');
 passport = require('./config/passport.js');
