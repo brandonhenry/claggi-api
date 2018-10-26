@@ -10,7 +10,9 @@ var http = require('http'),
     session = require('express-session'),
     cors = require('cors'),
     errorhandler = require('errorhandler'),
-    mongoose = require('mongoose');
+    mongoose = require('mongoose'),
+    MongoStore = require('connect-mongo')(session);
+
 
 var credentials = {key: privateKey, cert: certificate};
 var isProduction = process.env.NODE_ENV === 'production';
@@ -28,7 +30,21 @@ app.use(bodyParser.json());
 app.use(require('method-override')());
 app.use(express.static(__dirname + '/public'));
 
-app.use(session({ secret: 'conduit', cookie: { secure: false, maxAge: 6000000 }, resave: true, saveUninitialized: true  }));
+app.use(session({
+    secret: 'claggi',
+    cookie: {
+        secure: false,
+        httpOnly: false,
+        maxAge: 6000000
+    },
+    user: null,
+    resave: true,
+    saveUninitialized: true,
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection,
+        ttl: 24 * 60 * 60 // Keeps session open for 1 day
+    })
+}));
 
 if (!isProduction) {
   app.use(errorhandler());

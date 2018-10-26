@@ -21,19 +21,19 @@ router.get('/users/access', function (req, res, next) {
         code: req.query.code,
         failureRedirect: '/',
     }, function (err, accessToken, refreshToken) {
-        if (!req.session.user){
+        if (!req.session) {
             return res.status(401).json({error: 'must be signed in'});
         }
 
-        User.findById(req.session.user._id).then(function (user) {
+        User.find({sessionID: req.session.id}).then(function (user) {
             if (!user) {
                 return res.sendStatus(401);
             }
-
-            user.setEbayToken(accessToken, refreshToken);
-            user.save().then(function(){
-                return res.json({user: user.toAuthJSON()});
+            user.forEach(function (realUser) {
+                realUser.setEbayToken(accessToken, refreshToken);
+                realUser.save()
             });
+            return res.redirect('http://localhost:3000/#/main/settings')
         }).catch(next);
 
     })(req, res, next)
@@ -57,7 +57,8 @@ router.post('/users/login', function (req, res, next) {
 
         if (user) {
             user.token = user.generateJWT();
-            req.session.user = user;
+            user.sessionID = req.session.id;
+            user.save();
             return res.json({user: user.toAuthJSON()});
         } else {
             return res.status(422).json(info);

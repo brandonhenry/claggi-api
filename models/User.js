@@ -12,6 +12,7 @@ var UserSchema = new mongoose.Schema({
 	ebayToken: String,
 	ebayRefreshToken: String,
 	ebayAccount: [EbayAccount],
+	sessionID: String,
 	hash: String,
 	salt: String,
 }, {timestamps: true});
@@ -52,7 +53,8 @@ UserSchema.methods.toAuthJSON = function(){
 		token: this.generateJWT(),
 		ebayUsername: this.ebayUsername,
 		ebayToken: this.ebayToken,
-		refreshToken: this.ebayRefreshToken
+		refreshToken: this.ebayRefreshToken,
+		sessionID: this.sessionID
 	}
 };
 
