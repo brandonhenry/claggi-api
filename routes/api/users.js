@@ -3,6 +3,8 @@ var router = require('express').Router();
 var passport = require('passport');
 var User = mongoose.model('user');
 var auth = require('../auth');
+// declare states where it's accessible inside the clusre functions
+var states={};
 
 router.post('/users', function (req, res, next) {
     var user = new User();
@@ -17,6 +19,7 @@ router.post('/users', function (req, res, next) {
 });
 
 router.get('/users/access', function (req, res, next) {
+    var userState = states["user"].user;
     passport.authenticate('oauth2', {
         code: req.query.code,
         failureRedirect: '/',
@@ -24,16 +27,14 @@ router.get('/users/access', function (req, res, next) {
         if (!req.session) {
             return res.status(401).json({error: 'must be signed in'});
         }
-
-        User.find({sessionID: req.session.id}).then(function (user) {
+        User.findById(userState.id).then(function (user) {
             if (!user) {
                 return res.sendStatus(401);
             }
-            user.forEach(function (realUser) {
-                realUser.setEbayToken(accessToken, refreshToken);
-                realUser.save()
+            user.setEbayToken(accessToken, refreshToken);
+            user.save().then(function(){
+                return res.redirect('http://localhost:3000/#/main/settings')
             });
-            return res.redirect('http://localhost:3000/#/main/settings')
         }).catch(next);
 
     })(req, res, next)
@@ -57,7 +58,9 @@ router.post('/users/login', function (req, res, next) {
 
         if (user) {
             user.token = user.generateJWT();
-            user.sessionID = req.session.id;
+            states["user"] = {
+                user: user
+            };
             user.save();
             return res.json({user: user.toAuthJSON()});
         } else {
