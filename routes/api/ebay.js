@@ -3,6 +3,7 @@ var mongoose = require('mongoose');
 var User = mongoose.model('user');
 var auth = require('../auth');
 var EbayAccount = mongoose.model('ebayaccount');
+var states = {};
 
 router.post('/', auth.required, function (req, res, next) {
     User.findById(req.payload.id).then(function (user) {
@@ -16,7 +17,7 @@ router.post('/', auth.required, function (req, res, next) {
         ebayAcc.accessToken = token.accessToken;
         ebayAcc.refreshToken = token.refreshToken;
         ebayAcc.username = user.getUsername();
-        req.session.ebay = ebayAcc.id;
+        states["ebayID"] = ebayAcc.id;
 
         ebayAcc.save().then(function () {
             user.setEbayAccount(ebayAcc);
@@ -49,7 +50,7 @@ router.put('/update', function (req, res, next) {
 //-----------------------------------------FULFILLMENT-----------------------------------------//
 
 router.get('/fulfillment/orders', function (req, res, next) {
-    EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
+    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
@@ -60,7 +61,7 @@ router.get('/fulfillment/orders', function (req, res, next) {
 //-------------------------------------------ACCOUNT-------------------------------------------//
 
 router.get('/account/privileges', function (req, res, next) {
-    EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
+    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
@@ -71,7 +72,7 @@ router.get('/account/privileges', function (req, res, next) {
 //-------------------------------------------ANALYTICS-------------------------------------------//
 
 router.get('/analytics/sellerinfo', function (req, res, next) {
-    EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
+    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
@@ -80,7 +81,7 @@ router.get('/analytics/sellerinfo', function (req, res, next) {
 });
 
 router.get('/analytics/trafficreport', function (req, res, next) {
-    EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
+    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
@@ -91,7 +92,7 @@ router.get('/analytics/trafficreport', function (req, res, next) {
 //-------------------------------------------INVENTORY-------------------------------------------//
 
 router.get('/inventory/', function (req, res, next) {
-    EbayAccount.findById(req.session.ebay).then(async function (ebayAcc) {
+    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }

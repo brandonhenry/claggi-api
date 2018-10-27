@@ -42,6 +42,18 @@ router.get('/users/access', function (req, res, next) {
 
 router.get('/users/request', passport.authenticate('oauth2'));
 
+router.get('/users/revoke', function(req, res, next){
+    var userState = states["user"].user;
+    User.findById(userState.id).then(function(user){
+        user.removeAccess();
+        user.save().then(function(){
+            console.log(user);
+            res.redirect("http://localhost:3000/#/main/settings");
+        });
+
+    }).catch(next)
+});
+
 router.post('/users/login', function (req, res, next) {
     if (!req.body.user.email) {
         return res.status(422).json({errors: {email: "can't be blank"}});

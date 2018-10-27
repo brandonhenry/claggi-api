@@ -43,7 +43,12 @@ UserSchema.methods.generateJWT = function(){
 };
 
 UserSchema.methods.getUsername = function(){
-	return this.username;
+    return this.username;
+};
+
+UserSchema.methods.removeAccess = function(){
+    this.ebayToken = null;
+	this.ebayRefreshToken = null;
 };
 
 UserSchema.methods.toAuthJSON = function(){
