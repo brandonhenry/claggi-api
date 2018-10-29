@@ -5,25 +5,48 @@ var auth = require('../auth');
 var EbayAccount = mongoose.model('ebayaccount');
 var states = {};
 
-router.post('/', auth.required, function (req, res, next) {
-    User.findById(req.payload.id).then(function (user) {
-        if (!user.getEbayToken()) {
-            return res.status(422).json({errors: 'no ebay tokens have been set'})
-        }
-
-        var token = user.getEbayToken();
-        var ebayAcc = new EbayAccount();
-
-        ebayAcc.accessToken = token.accessToken;
-        ebayAcc.refreshToken = token.refreshToken;
-        ebayAcc.username = user.getUsername();
-        states["ebayID"] = ebayAcc.id;
-
-        ebayAcc.save().then(function () {
-            user.setEbayAccount(ebayAcc);
-            return res.json({eBayAccount: ebayAcc.toAuthJSON()});
+router.post('/updateUser', auth.required, function (req, res, next) {
+    EbayAccount.findById(states.ebayID).then(function (ebayAcc) {
+        console.log(req.body);
+        ebayAcc.username = req.body.name;
+        ebayAcc.save().then(function(){
+            return res.status(200).json({status: "set"});
         }).catch(next)
     }).catch(next)
+});
+
+router.post('/', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(function (user) {
+            if (!user.getEbayToken()) {
+                return res.status(422).json({errors: 'no ebay tokens have been set'})
+            }
+
+            var userEbayAccounts = user.getEbayAccounts();
+            var token = user.getEbayToken();
+            if (userEbayAccounts.length > 0) {
+                var ebayAcc = userEbayAccounts[0];
+                ebayAcc.accessToken = token.accessToken;
+                ebayAcc.refreshToken = token.refreshToken;
+                states["ebayID"] = ebayAcc.id;
+                ebayAcc.save().then(function () {
+                    return res.json({eBayAccount: ebayAcc.toAuthJSON()});
+                }).catch(next)
+            } else {
+                var ebayAcc = new EbayAccount();
+                ebayAcc.accessToken = token.accessToken;
+                ebayAcc.refreshToken = token.refreshToken;
+                states["ebayID"] = ebayAcc.id;
+
+                ebayAcc.save().then(function () {
+                    user.addEbayAccount(ebayAcc);
+                    user.save().then(function () {
+                        return res.json({eBayAccount: ebayAcc.toAuthJSON()});
+                    }).catch(next)
+                }).catch(next)
+            }
+        }).catch(next)
 });
 
 router.get('/', auth.required, function (req, res, next) {
@@ -85,7 +108,7 @@ router.get('/analytics/trafficreport', function (req, res, next) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
-        return res.json(await ebayAcc.getTrafficReport({dimension:'DAY'}));
+        return res.json(await ebayAcc.getTrafficReport({dimension: 'DAY'}));
     }).catch(next)
 });
 

@@ -4,7 +4,7 @@ var request = require('request-promise');
 var refresh = require('passport-oauth2-refresh');
 
 var EbayAccount = new mongoose.Schema({
-    accessToken: {type: String, required: [true, 'must have accesstoken']},
+    accessToken: [{type: String, required: [true, 'must have accesstoken']}],
     refreshToken: String,
     username: String,
     balance: String,
@@ -23,6 +23,10 @@ EbayAccount.methods.toAuthJSON = function () {
 
 EbayAccount.methods.setAccessToken = function(accessToken){
     this.accessToken = accessToken;
+};
+
+EbayAccount.methods.setRefreshToken = function(refreshToken){
+    this.refreshToken = refreshToken;
 };
 
 EbayAccount.methods.getAccessToken = function(){
@@ -54,8 +58,11 @@ EbayAccount.methods.request = function(method, uri, params){
             if (error.errors.message === 'Invalid access token'){
                 refresh.requestNewAccessToken('oauth2', ebayAccount.refreshToken , function(err, accessToken, refreshToken) {
                     ebayAccount.setAccessToken(accessToken);
+                    ebayAccount.setRefreshToken(refreshToken);
+                    ebayAccount.save().then(function(){
+                        resolve({error:"Invalid access token. Attempting to refresh token and attempt new request."})
+                    }).catch();
                 });
-                resolve({error:"tokenRefreshed"})
             }
             resolve(error);
         })

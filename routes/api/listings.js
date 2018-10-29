@@ -9,4 +9,8 @@ router.get('/', function (req, res, next) {
     }).catch();
 });
 
+router.get('/lister', function (req, res, next){
+
+});
+
 module.exports = router;

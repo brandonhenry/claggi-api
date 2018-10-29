@@ -49,8 +49,17 @@ router.get('/users/revoke', function(req, res, next){
         user.save().then(function(){
             console.log(user);
             res.redirect("http://localhost:3000/#/main/settings");
-        });
+        }).catch(next);
+    }).catch(next)
+});
 
+router.get('/users/reset', function (req, res, next){
+    var userState = states["user"].user;
+    User.findById(userState.id).then(function(user){
+        user.removeEbayAccounts();
+        user.save().then(function(){
+            return res.status(200).redirect('http://localhost:3000/#/main/settings');
+        }).catch(next)
     }).catch(next)
 });
 
@@ -82,7 +91,9 @@ router.post('/users/login', function (req, res, next) {
 });
 
 router.get('/user', auth.required, function (req, res, next) {
-    User.findById(req.payload.id).then(function (user) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(function (user) {
         if (!user) {
             return res.sendStatus(401);
         }

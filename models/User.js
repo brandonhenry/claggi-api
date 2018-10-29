@@ -3,7 +3,7 @@ var uniqueValidator = require('mongoose-unique-validator');
 var crypto = require('crypto');
 var jwt = require('jsonwebtoken');
 var secret = require('../config').secret;
-var EbayAccount = mongoose.model('ebayaccount');
+var Schema = mongoose.Schema;
 
 
 var UserSchema = new mongoose.Schema({
@@ -11,11 +11,11 @@ var UserSchema = new mongoose.Schema({
 	email: {type: String, lowercase: true, unique: true, required: [true, "can't be blank"], match: [/\S+@\S+\.\S+/, 'is invalid'], index: true},
 	ebayToken: String,
 	ebayRefreshToken: String,
-	ebayAccount: [EbayAccount],
+	ebayAccounts: [{ type: Schema.Types.ObjectId, ref: 'ebayaccount' }],
 	sessionID: String,
 	hash: String,
 	salt: String,
-}, {timestamps: true});
+}, {timestamps: true, usePushEach: true});
 
 UserSchema.plugin(uniqueValidator, {message: 'is already taken'});
 
@@ -56,6 +56,7 @@ UserSchema.methods.toAuthJSON = function(){
 		username: this.username,
 		email: this.email,
 		token: this.generateJWT(),
+		ebayAccounts: this.ebayAccounts,
 		ebayUsername: this.ebayUsername,
 		ebayToken: this.ebayToken,
 		refreshToken: this.ebayRefreshToken,
@@ -81,12 +82,16 @@ UserSchema.methods.getEbayToken = function(){
 	return {accessToken:this.ebayToken, refreshToken:this.ebayRefreshToken};
 };
 
-UserSchema.methods.setEbayAccount = function(account){
-	this.ebayAccount = account;
+UserSchema.methods.addEbayAccount = function(account){
+    this.ebayAccounts = this.ebayAccounts.concat([account]);
 };
 
-UserSchema.methods.getEbayAccount = function(){
-	return this.ebayAccount;
+UserSchema.methods.removeEbayAccounts = function(){
+    this.ebayAccounts = [];
+};
+
+UserSchema.methods.getEbayAccounts = function(){
+	return this.ebayAccounts;
 };
 
 mongoose.model('user', UserSchema);

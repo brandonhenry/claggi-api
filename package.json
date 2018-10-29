@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "mongo:start": "docker run --name realworld-mongo -p 27017:27017 mongo & sleep 5",
-    "start": "nodemon ./app.js",
+    "debug": "node %NODE_DEBUG_OPTION% ./app.js",
     "dev": "nodemon ./app.js",
     "test": "newman run ./tests/api-tests.postman.json -e ./tests/env-api-tests.postman.json",
     "stop": "lsof -ti :3000 | xargs kill",
@@ -13,6 +13,7 @@
   },
   "license": "ISC",
   "dependencies": {
+    "angular-xeditable": "^0.9.0",
     "apac": "^3.0.2",
     "body-parser": "1.15.0",
     "connect-mongo": "^2.0.1",
@@ -33,6 +34,7 @@
     "passport-local": "1.0.0",
     "passport-oauth2": "^1.4.0",
     "passport-oauth2-refresh": "^1.1.0",
+    "promise-request-retry": "^1.0.1",
     "puppeteer": "^1.9.0",
     "query-string": "^6.2.0",
     "request": "^2.69.0",
