@@ -49,4 +49,4 @@ class Lister {
     }
 }
 
-module.export = Lister;
+module.exports = Lister;
