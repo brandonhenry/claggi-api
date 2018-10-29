@@ -2,8 +2,6 @@ var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 var sku = require('shortid');
 var request = require('request-promise');
-var User = mongoose.model('user');
-var EbayAccount = mongoose.model('ebayaccount');
 var genDesc = require('../routes/utils/Description');
 var Schema = mongoose.Schema;
 
@@ -34,8 +32,6 @@ var ListingSchema = new mongoose.Schema({
     returnPolicy: String,
     shippingPolicy: String,
     fulfillmentPolicy: String,
-    user: [User],
-    ebayAccount: [EbayAccount],
     listingId: String,
     price: Number,
     profit: String

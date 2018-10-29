@@ -1,8 +1,7 @@
 var mongoose = require('mongoose');
-var uniqueValidator = require('mongoose-unique-validator');
 var request = require('request-promise');
 var refresh = require('passport-oauth2-refresh');
-var Schema = mongoose.Schema;
+var Lister = require('../routes/utils/Lister');
 
 var EbayAccount = new mongoose.Schema({
     accessToken: [{type: String, required: [true, 'must have accesstoken']}],
@@ -10,7 +9,8 @@ var EbayAccount = new mongoose.Schema({
     username: String,
     balance: String,
     listings: {},
-    orders: {}
+    orders: {},
+    lister: Lister
 }, {timestamp: true});
 
 EbayAccount.methods.toAuthJSON = function () {
@@ -20,6 +20,14 @@ EbayAccount.methods.toAuthJSON = function () {
         orders: this.orders,
         balance: this.balance
     }
+};
+
+EbayAccount.methods.setLister = function(lister){
+    this.lister = lister;
+};
+
+EbayAccount.methods.getLister = function(){
+    return this.lister;
 };
 
 EbayAccount.methods.setAccessToken = function(accessToken){

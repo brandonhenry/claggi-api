@@ -4,16 +4,19 @@ var Listing = mongoose.model('listing');
 
 class Lister {
 
-    constructor(ebayAccount){
-        this.ebayAccount = ebayAccount;
+    constructor(){
+        this.ebayAccount = null;
         this.listings = [];
+        this.active = false;
     }
 
     grabEbayListings(){
         this.listings = this.ebayAccount.getInventoryItems();
     }
 
-    start(){
+    start(account){
+        this.active = true;
+        this.ebayAccount = account;
         var i = this;
         //title.substring(0, 78) + '...'
         Listing.find({}).then(function(listing){
@@ -26,7 +29,11 @@ class Lister {
     }
 
     stop(){
+        this.active = false;
+    }
 
+    getStatus(){
+        return this.active;
     }
 
     isDuplicate(unpubListing){
