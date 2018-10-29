@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 var request = require('request-promise');
 var refresh = require('passport-oauth2-refresh');
+var Schema = mongoose.Schema;
 
 var EbayAccount = new mongoose.Schema({
     accessToken: [{type: String, required: [true, 'must have accesstoken']}],

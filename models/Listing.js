@@ -5,6 +5,7 @@ var request = require('request-promise');
 var User = mongoose.model('user');
 var EbayAccount = mongoose.model('ebayaccount');
 var genDesc = require('../routes/utils/Description');
+var Schema = mongoose.Schema;
 
 var ListingSchema = new mongoose.Schema({
     listingNumber: String,

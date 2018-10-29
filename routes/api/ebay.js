@@ -50,13 +50,17 @@ router.post('/', auth.required, function (req, res, next) {
 });
 
 router.get('/', auth.required, function (req, res, next) {
-    EbayAccount.findById(req.session.ebay).then(function (ebayAcc) {
-        if (!ebayAcc) {
-            res.status(422).json({errors: "could not find ebay account"})
-        }
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(function (user) {
+            if (!user){
+                return res.status(422).json({error: "no user logged in"})
+            }
 
-        res.json({ebayAccount: ebayAcc.toAuthJSON()})
-    })
+            return res.json(user.getEbayAccounts()[0].toAuthJSON())
+        }).catch(next);
+
+
 });
 
 router.put('/update', function (req, res, next) {
@@ -72,13 +76,19 @@ router.put('/update', function (req, res, next) {
 
 //-----------------------------------------FULFILLMENT-----------------------------------------//
 
-router.get('/fulfillment/orders', function (req, res, next) {
-    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
-        if (!ebayAcc) {
-            return res.status(422).json({errors: "no ebay account found"})
-        }
-        return res.json(await ebayAcc.getOrders());
-    }).catch(next)
+router.get('/fulfillment/orders', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user){
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.getOrders());
+        }).catch(next);
 });
 
 //-------------------------------------------ACCOUNT-------------------------------------------//
@@ -114,13 +124,19 @@ router.get('/analytics/trafficreport', function (req, res, next) {
 
 //-------------------------------------------INVENTORY-------------------------------------------//
 
-router.get('/inventory/', function (req, res, next) {
-    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
-        if (!ebayAcc) {
-            return res.status(422).json({errors: "no ebay account found"})
-        }
-        return res.json(await ebayAcc.getInventoryItems());
-    }).catch(next)
+router.get('/inventory/', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user){
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.getInventoryItems());
+        }).catch(next);
 });
 
 module.exports = router;

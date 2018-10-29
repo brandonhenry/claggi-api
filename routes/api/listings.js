@@ -5,8 +5,8 @@ var request = require('request');
 
 router.get('/', function (req, res, next) {
     Listing.find({}).then(function(listing){
-        res.json(JSON.stringify(listing))
-    }).catch();
+        res.json({count: listing.length})
+    }).catch(next);
 });
 
 router.get('/lister', function (req, res, next){

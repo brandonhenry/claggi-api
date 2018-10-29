@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 var Listing = require('./Listing.js');
+var Schema = mongoose.Schema;
 
 var OrderSchema = new mongoose.Schema({
     orderNo: Number,
