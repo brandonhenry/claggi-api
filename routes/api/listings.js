@@ -28,6 +28,20 @@ router.get('/', auth.required, function (req, res, next) {
     }).catch(next);
 });
 
+router.get('/addLister', auth.required, function(req, res, next){
+    var lister = new Lister();
+    User.findById(req.payload.id).then(function(user){
+        if (!user){
+            return res.status(422).json({error: "no user found!"})
+        }
+       var ebayAcc = user.getEbayAccounts()[0];
+       ebayAcc.lister = ebayAcc.lister.concat([lister]);
+       ebayAcc.save().then(function(){
+           return res.json({status: "added lister"})
+       })
+    }).catch(next);
+});
+
 router.get('/lister/start', auth.required, function(req, res, next){
     User.findById(req.payload.id).then(function(user){
 
