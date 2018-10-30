@@ -16,8 +16,11 @@ router.get('/', auth.required, function (req, res, next) {
 
         var ebayAccount = user.getEbayAccounts()[0];
         if (ebayAccount.getLister().length === 0){
-            ebayAccount.setLister(new Lister());
+            ebayAccount.lister = ebayAccount.lister.concat([new Lister()]);
             ebayAccount.save().then(function(){
+                ebayAccount.populate('lister').then(function(err, lister){
+                    console.log(lister);
+                });
                 lister = ebayAccount.getLister()[0];
             }).catch(next)
         } else {

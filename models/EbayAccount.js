@@ -10,7 +10,7 @@ var EbayAccount = new mongoose.Schema({
     balance: String,
     listings: {},
     orders: {},
-    lister: [Lister]
+    lister: [{ type: Lister }]
 }, {timestamp: true});
 
 EbayAccount.methods.toAuthJSON = function () {
