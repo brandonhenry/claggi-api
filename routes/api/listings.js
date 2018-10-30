@@ -7,18 +7,26 @@ var auth = require('../auth');
 
 router.get('/', auth.required, function (req, res, next) {
     var lister;
-    User.findById(req.payload.id).then(function(user){
+    User.findById(req.payload.id)
+        .populate('ebayAccounts')
+        .then(function(user){
         if (!user){
             res.status(422).json({error: "must be logged in"})
         }
 
         var ebayAccount = user.getEbayAccounts()[0];
-        if (!ebayAccount.getLister()){
-            ebayAccount.setLister(new Lister());
-            ebayAccount.save();
+        if (ebayAccount.getLister().length === 0){
+            ebayAccount.lister = ebayAccount.lister.concat([new Lister()]);
+            ebayAccount.save().then(function(){
+                ebayAccount.populate('lister').then(function(err, lister){
+                    console.log(lister);
+                });
+                lister = ebayAccount.getLister()[0];
+            }).catch(next)
+        } else {
+            lister = ebayAccount.getLister()[0];
         }
 
-        lister = ebayAccount.getLister();
         Listing.find({}).then(function(listing){
             res.json({
                 count: listing.length,
