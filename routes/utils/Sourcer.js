@@ -14,7 +14,22 @@ class Sourcer {
 
     constructor(ebayAccount){
         this.ebayAccount = ebayAccount._parent;
+        this.active = false;
     }
+
+    start(){
+        this.active = true;
+        scrape();
+    }
+
+    stop(){
+        this.active = false;
+    }
+
+    getStatus(){
+        return this.active;
+    }
+
 
     /**
      * Main function. Scrapes eBay for recently sold products and then checks to see if Amazon has those products.
