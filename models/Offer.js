@@ -37,9 +37,9 @@ var OfferSchema = new mongoose.Schema({
     published: Boolean,
 }, {timestamp: true});
 
-ListingSchema.plugin(uniqueValidator, {message: 'listing already exists'});
+OfferSchema.plugin(uniqueValidator, {message: 'listing already exists'});
 
-ListingSchema.methods.toAuthJSON = function () {
+OfferSchema.methods.toAuthJSON = function () {
     return {
         sourcePrice: this.sourcePrice,
         price: this.price,
@@ -47,31 +47,31 @@ ListingSchema.methods.toAuthJSON = function () {
     }
 };
 
-ListingSchema.methods.getSourcePrice = function () {
+OfferSchema.methods.getSourcePrice = function () {
     return this.sourcePrice;
 };
 
-ListingSchema.methods.getListingPrice = function () {
+OfferSchema.methods.getListingPrice = function () {
     return this.price;
 };
 
-ListingSchema.methods.getImage = function () {
+OfferSchema.methods.getImage = function () {
     return this.image;
 };
 
-ListingSchema.methods.canList = function () {
+OfferSchema.methods.canList = function () {
     return (this.ebayAccount && this.price)
 };
 
-ListingSchema.methods.updateListingPrice = function (price) {
+OfferSchema.methods.updateListingPrice = function (price) {
     this.price = price;
 };
 
-ListingSchema.methods.formatDescription = function () {
+OfferSchema.methods.formatDescription = function () {
     return genDesc(this);
 };
 
-ListingSchema.methods.setInitialState = function (params) {
+OfferSchema.methods.setInitialState = function (params) {
     this.source = params.source;
     this.sourceID = params.sourceID;
     this.itemSKU = sku.generate();
@@ -92,15 +92,15 @@ ListingSchema.methods.setInitialState = function (params) {
     this.ean = params.ean;
 };
 
-ListingSchema.methods.configure = function (params) {
+OfferSchema.methods.configure = function (params) {
     this.quantity = params.quantity;
 };
 
-ListingSchema.methods.getProductDescription = function () {
+OfferSchema.methods.getProductDescription = function () {
     return this.description;
 };
 
-ListingSchema.methods.getProductDetails = function () {
+OfferSchema.methods.getProductDetails = function () {
     var productDetails = '';
     this.productDetails.each(function (detail) {
         productDetails += `<li>${detail}</li>\n`
@@ -108,7 +108,7 @@ ListingSchema.methods.getProductDetails = function () {
     return productDetails;
 };
 
-ListingSchema.methods.toRequestPayload = function () {
+OfferSchema.methods.toRequestPayload = function () {
     return {
         /* EbayOfferDetailsWithKeys */
         "availableQuantity": this.quantity,
