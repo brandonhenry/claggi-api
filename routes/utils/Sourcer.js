@@ -14,6 +14,7 @@ class Sourcer {
 
     constructor(){
         this.active = false;
+        this.lastScan = 'No scan yet..';
         this.ebayAccount = null;
     }
 
@@ -21,7 +22,7 @@ class Sourcer {
         this.ebayAccount = ebayAccount;
     }
 
-    start(){
+    run(){
         this.active = true;
         this.scrape().then(function(){
             stop();
@@ -36,6 +37,17 @@ class Sourcer {
         return this.active;
     }
 
+    getLastScan(){
+        return this.lastScan;
+    }
+
+    queue(){
+        var delay = 600000; // 10 minutes
+        if (this.active){
+            setInterval(this.run(), delay);
+        }
+        this.lastScan = new Date().toLocaleTimeString();
+    }
 
     /**
      * Main function. Scrapes eBay for recently sold products and then checks to see if Amazon has those products.
@@ -46,7 +58,7 @@ class Sourcer {
         try {
             let ebay = new EbayAPI();
             let azItems = [];
-            let pages = 1;
+            let pages = 5;
             for (let pageNumber = 1; pageNumber <= pages; ++pageNumber) {
                 let tempItems = await this.findEbayProducts(ebay, pageNumber);
                 azItems = azItems.concat(tempItems);
@@ -54,6 +66,7 @@ class Sourcer {
                     azItems.forEach(function (item) {
                         // process all amazon items
                     });
+                    this.queue();
                 }
             }
         } catch (err) {

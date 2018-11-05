@@ -14,7 +14,8 @@ router.get('/', auth.required, function (req, res, next) {
                 count: offers.length,
                 offers: offers,
                 listerStatus: lister.getStatus(),
-                sourcerStatus: sourcer.getStatus()
+                sourcerStatus: sourcer.getStatus(),
+                sourcerLastScan: sourcer.getLastScan()
             })
         }).catch(next);
 });
@@ -43,7 +44,7 @@ router.get('/sourcer/start', auth.required, function(req, res, next){
         sourcer.setEbayAccount(user.getEbayAccounts()[0])
     }).catch(next);
 
-   sourcer.start();
+   sourcer.run();
    return res.json({status: sourcer.getStatus()})
 });
 
