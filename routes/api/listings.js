@@ -1,6 +1,6 @@
 var router = require('express').Router();
 var mongoose = require('mongoose');
-var Listing = mongoose.model('listing');
+var Offer = mongoose.model('offer');
 var Lister = require('../utils/Lister');
 var Sourcer = require('../utils/Sourcer');
 var User = mongoose.model('user');
@@ -9,9 +9,10 @@ var lister = new Lister;
 var sourcer = new Sourcer;
 
 router.get('/', auth.required, function (req, res, next) {
-        Listing.find({}).then(function(listing){
+        Offer.find({}).then(function(offers){
             res.json({
-                count: listing.length,
+                count: offers.length,
+                offers: offers,
                 listerStatus: lister.getStatus(),
                 sourcerStatus: sourcer.getStatus()
             })
@@ -56,6 +57,10 @@ router.get('/sourcer/stop', auth.required, function(req, res, next){
 
 router.get('/sourcer', auth.required, function(req, res, next){
     return res.json({status: sourcer.getStatus()})
+});
+
+router.get('/lister', auth.required, function(req, res, next){
+    return res.json({status: lister.getStatus()})
 });
 
 module.exports = router;

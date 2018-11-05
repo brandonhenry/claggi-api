@@ -3,9 +3,8 @@ var uniqueValidator = require('mongoose-unique-validator');
 var sku = require('shortid');
 var request = require('request-promise');
 var genDesc = require('../routes/utils/Description');
-var Schema = mongoose.Schema;
 
-var ListingSchema = new mongoose.Schema({
+var OfferSchema = new mongoose.Schema({
     listingNumber: String,
     itemSKU: String,
     source: String,
@@ -34,7 +33,8 @@ var ListingSchema = new mongoose.Schema({
     fulfillmentPolicy: String,
     listingId: String,
     price: Number,
-    profit: String
+    profit: String,
+    published: Boolean,
 }, {timestamp: true});
 
 ListingSchema.plugin(uniqueValidator, {message: 'listing already exists'});
@@ -166,4 +166,4 @@ var getCategory = function (title) {
     }).catch()
 };
 
-mongoose.model('listing', ListingSchema);
+mongoose.model('offer', OfferSchema);

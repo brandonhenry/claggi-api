@@ -1,7 +1,7 @@
 var request = require('request');
 var EbayAPI = require('./Ebay');
 var mongoose = require('mongoose');
-var Listing = mongoose.model('listing');
+var Offer = mongoose.model('offer');
 
 // Amazon Constants
 let OperationHelper = require('apac').OperationHelper;
@@ -39,7 +39,7 @@ class Sourcer {
 
     /**
      * Main function. Scrapes eBay for recently sold products and then checks to see if Amazon has those products.
-     * Creates Listing models for any products found.
+     * Creates Offer models for any products found.
      * @returns {Promise<void>}
      */
     async scrape() {
@@ -112,7 +112,7 @@ class Sourcer {
                                         ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0]
                                     };
 
-                                    var listing = new Listing();
+                                    var listing = new Offer();
                                     listing.setInitialState(params);
                                     listing.save();
                                     console.log(listing);

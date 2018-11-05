@@ -1,6 +1,6 @@
 
 var mongoose = require('mongoose');
-var Listing = mongoose.model('listing');
+var Offer = mongoose.model('offer');
 
 class Lister {
 
@@ -19,8 +19,8 @@ class Lister {
         this.ebayAccount = account;
         var i = this;
         //title.substring(0, 78) + '...'
-        Listing.find({}).then(function(listing){
-            listing.each(async function(item){
+        Offer.find({}).then(function(offer){
+            offer.each(async function(item){
                 if (!i.isDuplicate(item) && item.canList()){
                     await i.ebayAccount.createOffer(await item.toRequestPayload()).catch();
                 }

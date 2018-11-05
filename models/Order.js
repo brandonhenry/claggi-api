@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
-var Listing = require('./Listing.js');
+var Offer = require('./Offer.js');
 var Schema = mongoose.Schema;
 
 var OrderSchema = new mongoose.Schema({
@@ -16,7 +16,7 @@ var OrderSchema = new mongoose.Schema({
     buyerZip: String,
     buyerPhone: String,
     orderDate: String,
-    sourceInfo: Listing,
+    sourceInfo: Offer,
     buyNowPrice: String,
     quantity: Number,
     paymentStatus: String,

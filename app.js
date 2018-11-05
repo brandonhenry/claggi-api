@@ -58,7 +58,7 @@ if(isProduction){
 }
 
 
-require('./models/Listing');
+require('./models/Offer');
 require('./models/EbayAccount');
 require('./models/User');
 require('./models/Order');
