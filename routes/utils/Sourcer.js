@@ -12,14 +12,20 @@ let azAccessKey = 'nT/nJFQVyGJ1kAlbbk2YveBUuPPMhhvApAeeAc4i',
 
 class Sourcer {
 
-    constructor(ebayAccount){
-        this.ebayAccount = ebayAccount._parent;
+    constructor(){
         this.active = false;
+        this.ebayAccount = null;
+    }
+
+    setEbayAccount(ebayAccount){
+        this.ebayAccount = ebayAccount;
     }
 
     start(){
         this.active = true;
-        scrape();
+        this.scrape().then(function(){
+            stop();
+        });
     }
 
     stop(){
