@@ -122,7 +122,9 @@ class Sourcer {
                                             res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0],
                                         image: res.ItemSearchResponse.Items[0].Item[0].ImageSets[0].ImageSet[0].HiResImage[0].URL[0],
                                         mpn: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].MPN[0],
-                                        ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0]
+                                        ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0],
+                                        published: false,
+                                        created: false
                                     };
 
                                     var listing = new Offer();

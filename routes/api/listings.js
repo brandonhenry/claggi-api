@@ -15,19 +15,43 @@ router.get('/', auth.required, function (req, res, next) {
                 offers: offers,
                 listerStatus: lister.getStatus(),
                 sourcerStatus: sourcer.getStatus(),
-                sourcerLastScan: sourcer.getLastScan()
+                sourcerLastScan: sourcer.getLastScan(),
+                listerLastUpdate: lister.getLastUpdate()
             })
         }).catch(next);
 });
 
 router.get('/lister/start', auth.required, function(req, res, next){
-    User.findById(req.payload.id).then(function(user){
+    if (lister.getStatus()){
+        return res.json({status: lister.getStatus()})
+    }
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(function(user){
+        if (!user){
+            return res.json({error: "no user found"})
+        }
+        if (!user.getEbayAccounts()[0]){
+            return res.json({error: "no ebay account found"})
+        }
 
+        lister.setAccount(user.getEbayAccounts()[0]);
+        lister.start();
+        return res.json({status: lister.getStatus()})
     }).catch(next)
 });
 
 router.get('/lister/stop', auth.required, function(req, res, next){
+    if (!lister.getStatus()){
+        return res.json({status: lister.getStatus()})
+    }
+    lister.stop();
     lister = null;
+    return res.json({status: false})
+});
+
+router.get('/lister/getLastUpdate', auth.required, function(req, res, next){
+    return res.json({lastUpdate: lister.getLastUpdate()})
 });
 
 router.get('/sourcer/start', auth.required, function(req, res, next){

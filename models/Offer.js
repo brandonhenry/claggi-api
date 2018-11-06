@@ -31,10 +31,12 @@ var OfferSchema = new mongoose.Schema({
     returnPolicy: String,
     shippingPolicy: String,
     fulfillmentPolicy: String,
-    listingId: String,
+    listingID: String,
     price: Number,
     profit: String,
     published: Boolean,
+    created: Boolean,
+    offerID: String
 }, {timestamp: true});
 
 OfferSchema.plugin(uniqueValidator, {message: 'listing already exists'});
@@ -59,8 +61,36 @@ OfferSchema.methods.getImage = function () {
     return this.image;
 };
 
+OfferSchema.methods.setPublished = function(isPublished){
+    this.published = isPublished;
+};
+
+OfferSchema.methods.setCreated = function(isCreated){
+    this.created = isCreated;
+};
+
+OfferSchema.methods.setOfferID = function(offerID){
+    this.offerID = offerID;
+};
+
+OfferSchema.methods.getOfferID = function(){
+    return this.offerID;
+};
+
+OfferSchema.methods.setListingID = function(listingID){
+    this.listingID = listingID;
+};
+
 OfferSchema.methods.canList = function () {
     return (this.ebayAccount && this.price)
+};
+
+OfferSchema.methods.isPublished = function (){
+    return this.published;
+};
+
+OfferSchema.methods.isCreated = function (){
+    return this.created;
 };
 
 OfferSchema.methods.updateListingPrice = function (price) {
@@ -90,6 +120,8 @@ OfferSchema.methods.setInitialState = function (params) {
     this.categoryId = getCategory(this.title);
     this.mpn = params.mpn;
     this.ean = params.ean;
+    this.published = params.published;
+    this.created = params.created;
 };
 
 OfferSchema.methods.configure = function (params) {
