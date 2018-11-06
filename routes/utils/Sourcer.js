@@ -66,13 +66,14 @@ class Sourcer {
                     azItems.forEach(function (item) {
                         // process all amazon items
                     });
-                    this.queue();
                 }
             }
         } catch (err) {
             console.log(err);
             throw new Error('Failed to send response' + err);
         }
+
+        this.queue();
     }
 
     /**
