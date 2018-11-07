@@ -110,13 +110,13 @@ class Sourcer {
                                         ebayAccount: i.ebayAccount,
                                         sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0],
                                         title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0],
-                                        sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice[0],
-                                        height: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._,
-                                        width: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._,
-                                        length: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0]._,
-                                        dimensionUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0].$.Units,
-                                        weight: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0]._,
-                                        weightUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0].$.Units,
+                                        sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice[0].replace('$', ''),
+                                        height: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._ / 100).toFixed(2),
+                                        width: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._ / 100).toFixed(2),
+                                        length: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0]._ / 100).toFixed(2),
+                                        dimensionUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0].$.Units.split('-')[1],
+                                        weight: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0]._ / 100).toFixed(2),
+                                        weightUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0].$.Units.split(' ')[1],
                                         brand: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Brand[0],
                                         description: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Feature[0] + '\n\n' +
                                         res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0],
@@ -126,17 +126,8 @@ class Sourcer {
                                         published: false,
                                         created: false
                                     };
+                                    Offers.create(params, (err) => {if (err) {console.log(err) } resolve(true)});
 
-<<<<<<< HEAD
-                                    var offer = new Offers();
-                                    offer.setInitialState(params);
-                                    offer.save();
-                                    console.log(listing);
-=======
-                                    var listing = new Offer();
-                                    listing.setInitialState(params);
-                                    Offer.create(params, (err) => {if (err) {console.log(err) }});
->>>>>>> c414d721f7989ae8012f865f1a2a15c62b16ec42
                                 } else {
                                     resolve(undefined);
                                 }

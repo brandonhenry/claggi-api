@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-var Offer = mongoose.model('offer');
+var Offers = mongoose.model('offers');
 
 class Repricer {
     constructor(){
@@ -11,7 +11,7 @@ class Repricer {
      */
     start() {
         var repricer = this;
-        Offer.find({}).then(function(listing){
+        Offers.find({}).then(function(listing){
            if (!listing){
                console.log('error');
            }

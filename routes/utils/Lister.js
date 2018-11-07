@@ -1,6 +1,6 @@
 
 var mongoose = require('mongoose');
-var Offer = mongoose.model('offer');
+var Offers = mongoose.model('offers');
 
 class Lister {
 
@@ -44,7 +44,7 @@ class Lister {
 
     createOffers(){
         //title.substring(0, 78) + '...'
-        Offer.find({}).then((offer) => {
+        Offers.find({}).then((offer) => {
             offer.each(async (item) => {
                 if (!this.isDuplicate(item) && item.canList() && !item.isCreated()){
                     await this.ebayAccount.createOffer(await item.toRequestPayload())
@@ -92,7 +92,7 @@ class Lister {
 
     publishOffers(){
         //title.substring(0, 78) + '...'
-        Offer.find({}).then((offer) => {
+        Offers.find({}).then((offer) => {
             offer.each(async (item) => {
                 if (!this.isDuplicate(item) && !item.isPublished()){
                     await this.ebayAccount.publishOffer(await item.getOfferID())
