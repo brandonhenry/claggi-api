@@ -12,39 +12,41 @@ let azAccessKey = 'nT/nJFQVyGJ1kAlbbk2YveBUuPPMhhvApAeeAc4i',
 
 class Sourcer {
 
-    constructor(){
+    constructor() {
         this.active = false;
         this.lastScan = 'No scan yet..';
         this.ebayAccount = null;
     }
 
-    setEbayAccount(ebayAccount){
+    setEbayAccount(ebayAccount) {
         this.ebayAccount = ebayAccount;
     }
 
-    run(){
+    run() {
         this.active = true;
-        this.scrape().then(function(){
-            stop();
+        this.scrape().then(() => {
+            this.queue();
         });
     }
 
-    stop(){
+    stop() {
         this.active = false;
     }
 
-    getStatus(){
+    getStatus() {
         return this.active;
     }
 
-    getLastScan(){
+    getLastScan() {
         return this.lastScan;
     }
 
-    queue(){
+    queue() {
         var delay = 600000; // 10 minutes
-        if (this.active){
-            setInterval(this.run(), delay);
+        if (this.active) {
+            setInterval(() => {
+                this.run()
+            }, delay);
         }
         this.lastScan = new Date().toLocaleTimeString();
     }
@@ -55,25 +57,22 @@ class Sourcer {
      * @returns {Promise<void>}
      */
     async scrape() {
-        try {
-            let ebay = new EbayAPI();
-            let azItems = [];
-            let pages = 5;
-            for (let pageNumber = 1; pageNumber <= pages; ++pageNumber) {
-                let tempItems = await this.findEbayProducts(ebay, pageNumber);
-                azItems = azItems.concat(tempItems);
-                if (pageNumber === pages) {
-                    azItems.forEach(function (item) {
-                        // process all amazon items
-                    });
+        return new Promise(async (resolve, reject) => {
+            try {
+                let ebay = new EbayAPI();
+                let pages = 1;
+                for (let pageNumber = 1; pageNumber <= pages; ++pageNumber) {
+                    await this.findEbayProducts(ebay, pageNumber);
+                    if (pageNumber === pages) {
+                        // all done
+                        resolve(true);
+                    }
                 }
+            } catch (err) {
+                console.log(err);
+                throw new Error('Failed to send response' + err);
             }
-        } catch (err) {
-            console.log(err);
-            throw new Error('Failed to send response' + err);
-        }
-
-        this.queue();
+        })
     }
 
     /**
@@ -120,7 +119,7 @@ class Sourcer {
                                         weightUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0].$.Units,
                                         brand: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Brand[0],
                                         description: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Feature[0] + '\n\n' +
-                                            res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0],
+                                        res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0],
                                         image: res.ItemSearchResponse.Items[0].Item[0].ImageSets[0].ImageSet[0].HiResImage[0].URL[0],
                                         mpn: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].MPN[0],
                                         ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0],
@@ -128,17 +127,22 @@ class Sourcer {
                                         created: false
                                     };
 
+<<<<<<< HEAD
                                     var offer = new Offers();
                                     offer.setInitialState(params);
                                     offer.save();
                                     console.log(listing);
+=======
+                                    var listing = new Offer();
+                                    listing.setInitialState(params);
+                                    Offer.create(params, (err) => {if (err) {console.log(err) }});
+>>>>>>> c414d721f7989ae8012f865f1a2a15c62b16ec42
                                 } else {
                                     resolve(undefined);
                                 }
                             } catch (err) {
                                 resolve(undefined);
                             }
-
                         });
                 }).catch((err) => {
                     console.error("Something went wrong: ", err);
@@ -180,6 +184,10 @@ class Sourcer {
 
                         if (null != ebayTitle && null != ebayUrl) {
                             await source.findAmazonProduct(ebayTitle);
+                        }
+
+                        if (i === ebayItems.length - 1) {
+                            resolve(true);
                         }
                     }
                 }
