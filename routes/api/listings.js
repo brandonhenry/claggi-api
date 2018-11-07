@@ -1,6 +1,6 @@
 var router = require('express').Router();
 var mongoose = require('mongoose');
-var Offer = mongoose.model('offer');
+var Offers = mongoose.model('offers');
 var Lister = require('../utils/Lister');
 var Sourcer = require('../utils/Sourcer');
 var User = mongoose.model('user');
@@ -9,7 +9,7 @@ var lister = new Lister;
 var sourcer = new Sourcer;
 
 router.get('/', auth.required, function (req, res, next) {
-        Offer.find({}).then(function(offers){
+        Offers.find({}).then(function(offers){
             res.json({
                 count: offers.length,
                 offers: offers,

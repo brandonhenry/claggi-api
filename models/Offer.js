@@ -198,4 +198,4 @@ var getCategory = function (title) {
     }).catch()
 };
 
-mongoose.model('offer', OfferSchema);
+mongoose.model('offers', OfferSchema);

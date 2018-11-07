@@ -1,7 +1,7 @@
 var request = require('request');
 var EbayAPI = require('./Ebay');
 var mongoose = require('mongoose');
-var Offer = mongoose.model('offer');
+var Offers = mongoose.model('offers');
 
 // Amazon Constants
 let OperationHelper = require('apac').OperationHelper;
@@ -128,9 +128,9 @@ class Sourcer {
                                         created: false
                                     };
 
-                                    var listing = new Offer();
-                                    listing.setInitialState(params);
-                                    listing.save();
+                                    var offer = new Offers();
+                                    offer.setInitialState(params);
+                                    offer.save();
                                     console.log(listing);
                                 } else {
                                     resolve(undefined);
