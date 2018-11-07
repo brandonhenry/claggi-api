@@ -23,7 +23,7 @@ class Lister {
 
         this.active = true;
         this.createOffers();
-        this.publishOffers();
+        // this.publishOffers();
     }
 
     stop(){
@@ -53,6 +53,14 @@ class Lister {
                             item.setCreated(true);
                             item.save();
                         }).catch();
+                } else {
+                    if (this.isDuplicate()){
+                        console.log('This item is a duplicate');
+                    } else if (item.canList()){
+                        console.log("Item can't be listed because no ebay account or price.")
+                    } else {
+                        console.log("Item created already? " + item.isCreated())
+                    }
                 }
             });
         }).catch();
