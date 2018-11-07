@@ -46,12 +46,15 @@ class Lister {
         //title.substring(0, 78) + '...'
         Offers.find({}).then((offer) => {
             offer.each(async (item) => {
+                if (!this.active){
+                    return;
+                }
                 if (!this.isDuplicate(item) && item.canList() && !item.isCreated()){
                     await this.ebayAccount.createOffer(await item.toRequestPayload())
                         .then(function(offerID){
                             item.setOfferID(offerID);
                             item.setCreated(true);
-                            item.save();
+                            item.save(function(err){console.log(err);});
                         }).catch();
                 } else {
                     if (this.isDuplicate()){
