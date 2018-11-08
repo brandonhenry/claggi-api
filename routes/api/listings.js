@@ -36,9 +36,9 @@ router.get('/lister/start', auth.required, function(req, res, next){
         }
 
         lister.setAccount(user.getEbayAccounts()[0]);
-        lister.start();
-        return res.json({status: lister.getStatus()})
-    }).catch(next)
+    }).catch(next);
+    lister.start();
+    return res.json({status: lister.getStatus()})
 });
 
 router.get('/lister/stop', auth.required, function(req, res, next){

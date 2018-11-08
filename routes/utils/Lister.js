@@ -1,98 +1,110 @@
-
 var mongoose = require('mongoose');
 var Offers = mongoose.model('offers');
 
 class Lister {
 
-    constructor(){
+    constructor() {
         this.ebayAccount = null;
         this.listings = [];
         this.active = false;
         this.lastUpdate = 'No data..';
     }
 
-    async grabEbayListings(){
+    async grabEbayListings() {
         this.listings = await this.ebayAccount.getInventoryItems();
     }
 
-    start(){
-        if (!this.ebayAccount){
+    start() {
+        if (!this.ebayAccount) {
             console.log("no ebay account set in lister!!");
             return "no ebay account set in lister!!"
         }
 
         this.active = true;
-        this.createOffers();
+        this.createOffers().then(() => {
+            this.queueCreateOffers();
+        });
         // this.publishOffers();
     }
 
-    stop(){
+    stop() {
         this.active = false;
     }
 
-    getStatus(){
+    getStatus() {
         return this.active;
     }
 
-    getLastUpdate(){
+    getLastUpdate() {
         return this.lastUpdate;
     }
 
-    setAccount(account){
+    setAccount(account) {
         this.ebayAccount = account;
     }
 
-    createOffers(){
-        //title.substring(0, 78) + '...'
-        Offers.find({}).then((offer) => {
-            offer.each(async (item) => {
-                if (!this.active){
-                    return;
-                }
-                if (!this.isDuplicate(item) && item.canList() && !item.isCreated()){
-                    await this.ebayAccount.createOffer(await item.toRequestPayload())
-                        .then(function(offerID){
-                            item.setOfferID(offerID);
-                            item.setCreated(true);
-                            item.save(function(err){console.log(err);});
-                        }).catch();
-                } else {
-                    if (this.isDuplicate()){
-                        console.log('This item is a duplicate');
-                    } else if (item.canList()){
-                        console.log("Item can't be listed because no ebay account or price.")
-                    } else {
-                        console.log("Item created already? " + item.isCreated())
+    createOffers() {
+        return new Promise(function(resolve, reject){
+            //title.substring(0, 78) + '...'
+            var i = 0;
+            Offers.find({}).then((offer) => {
+                var itemsLen = offer.length;
+                offer[0].each(async (item) => {
+                    ++i;
+                    if (!this.active) {
+                        return;
                     }
-                }
-            });
-        }).catch();
-        this.queueCreateOffers();
+                    if (!this.isDuplicate(item) && item.canList() && !item.isCreated()) {
+                        await this.ebayAccount.createOffer(await item.toRequestPayload())
+                            .then(function (offerID) {
+                                item.setOfferID(offerID);
+                                item.setCreated(true);
+                                item.save(function (err) {
+                                    console.log(err);
+                                });
+                            }).catch();
+                    } else {
+                        if (this.isDuplicate()) {
+                            console.log('This item is a duplicate');
+                        } else if (item.canList()) {
+                            console.log("Item can't be listed because no ebay account or price.")
+                        } else {
+                            console.log("Item created already? " + item.isCreated())
+                        }
+                    }
+                    if (i === itemsLen){
+                        resolve(true);
+                    }
+                });
+            }).catch((err)=>{console.log(err)});
+        })
     }
 
-    queueCreateOffers(){
+    queueCreateOffers() {
         var delay = 600000; // 10 minutes;
         this.lastUpdate = new Date().toLocaleTimeString();
-        if (this.active){
-            setInterval(this.createOffers(), delay);
+        if (this.active) {
+            setInterval(() => {
+                this.createOffers()
+            }, delay);
         }
     }
 
-    queuePublishOffers(){
+    queuePublishOffers() {
         var delay = 600000; // 10 minutes;
         this.lastUpdate = new Date().toLocaleTimeString();
-        if (this.active){
+        if (this.active) {
             setInterval(this.publishOffers(), delay);
         }
     }
 
-    isDuplicate(unpubListing){
+    isDuplicate(unpubListing) {
         var isDuplicate = false;
-        this.grabEbayListings().then(function(){
-            this.listings.each(function(listing){
+        this.grabEbayListings().then(function () {
+            this.listings.each(function (listing) {
                 if (listing.ean === unpubListing.ean ||
                     listing.upc === unpubListing.upc ||
-                    listing.itemSKU === unpubListing.itemSKU){
+                    listing.itemSKU === unpubListing.itemSKU) {
                     isDuplicate = true;
                 }
             });
@@ -101,13 +113,13 @@ class Lister {
         return isDuplicate;
     }
 
-    publishOffers(){
+    publishOffers() {
         //title.substring(0, 78) + '...'
         Offers.find({}).then((offer) => {
             offer.each(async (item) => {
-                if (!this.isDuplicate(item) && !item.isPublished()){
+                if (!this.isDuplicate(item) && !item.isPublished()) {
                     await this.ebayAccount.publishOffer(await item.getOfferID())
-                        .then(function(listingID){
+                        .then(function (listingID) {
                             item.setListingID(listingID);
                             item.setPublished(true);
                             item.save();
