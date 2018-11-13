@@ -3,8 +3,9 @@ var router = require('express').Router();
 var passport = require('passport');
 var User = mongoose.model('user');
 var auth = require('../auth');
+var EbayAccount = mongoose.model('ebayaccount');
 // declare states where it's accessible inside the clusre functions
-var states={};
+var states = {};
 
 router.post('/users', function (req, res, next) {
     var user = new User();
@@ -27,37 +28,58 @@ router.get('/users/access', function (req, res, next) {
         if (!req.session) {
             return res.status(401).json({error: 'must be signed in'});
         }
-        User.findById(userState.id).then(function (user) {
-            if (!user) {
-                return res.sendStatus(401);
-            }
-            user.setEbayToken(accessToken, refreshToken);
-            user.save().then(function(){
-                return res.redirect('http://localhost:3000/#/main/settings')
-            });
-        }).catch(next);
+        User.findById(userState.id)
+            .populate("ebayAccounts")
+            .then(function (user) {
+                if (!user) {
+                    return res.sendStatus(401);
+                }
+                user.setEbayToken(accessToken, refreshToken);
+                user.save(()=>{console.log(err)}).catch();
+                var userEbayAccounts = user.getEbayAccounts();
+                if (userEbayAccounts.length > 0) {
+                    var ebayAcc = userEbayAccounts[0];
+                    ebayAcc.accessToken = accessToken;
+                    ebayAcc.refreshToken = refreshToken;
+                    states["ebayID"] = ebayAcc.id;
+                    ebayAcc.save().then(function () {
+                        return res.redirect('http://localhost:3000/#/main/settings')
+                    }).catch(next)
+                } else {
+                    var ebayAcc = new EbayAccount();
+                    ebayAcc.accessToken = accessToken;
+                    ebayAcc.refreshToken = refreshToken;
+                    states["ebayID"] = ebayAcc.id;
 
+                    ebayAcc.save().then(function () {
+                        user.addEbayAccount(ebayAcc);
+                        user.save().then(function () {
+                            return res.redirect('http://localhost:3000/#/main/settings')
+                        }).catch(next)
+                    }).catch(next)
+                }
+            }).catch(next);
     })(req, res, next)
 });
 
 router.get('/users/request', passport.authenticate('oauth2'));
 
-router.get('/users/revoke', function(req, res, next){
+router.get('/users/revoke', function (req, res, next) {
     var userState = states["user"].user;
-    User.findById(userState.id).then(function(user){
+    User.findById(userState.id).then(function (user) {
         user.removeAccess();
-        user.save().then(function(){
+        user.save().then(function () {
             console.log(user);
             res.redirect("http://localhost:3000/#/main/settings");
         }).catch(next);
     }).catch(next)
 });
 
-router.get('/users/reset', function (req, res, next){
+router.get('/users/reset', function (req, res, next) {
     var userState = states["user"].user;
-    User.findById(userState.id).then(function(user){
+    User.findById(userState.id).then(function (user) {
         user.removeEbayAccounts();
-        user.save().then(function(){
+        user.save().then(function () {
             return res.status(200).redirect('http://localhost:3000/#/main/settings');
         }).catch(next)
     }).catch(next)
@@ -91,15 +113,18 @@ router.post('/users/login', function (req, res, next) {
 });
 
 router.get('/user', auth.required, function (req, res, next) {
+    if (!states["user"].user){
+       return res.status(422).json({error: "invalid_user"})
+    }
     User.findById(req.payload.id)
         .populate("ebayAccounts")
         .then(function (user) {
-        if (!user) {
-            return res.sendStatus(401);
-        }
+            if (!user) {
+                return res.sendStatus(401);
+            }
 
-        return res.json({user: user.toAuthJSON()});
-    }).catch(next);
+            return res.json({user: user.toAuthJSON()});
+        }).catch(next);
 });
 
 router.put('/user', auth.required, function (req, res, next) {
