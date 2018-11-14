@@ -27,8 +27,9 @@ router.post('/users/manual', function(req, res, next){
         if (!user) {
             return res.sendStatus(401);
         }
+        console.log(req);
         user.accessToken = req.code;
-        user.save(()=>{return res.redirect('http://localhost:3000/#/main/settings')}).catch(next);
+        user.save( () => {return res.json({user:user.toAuthJSON()})}).catch(next);
     }).catch(next);
 });
 
