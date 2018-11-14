@@ -3,7 +3,6 @@ var router = require('express').Router();
 var passport = require('passport');
 var User = mongoose.model('user');
 var auth = require('../auth');
-var EbayAccount = mongoose.model('ebayaccount');
 // declare states where it's accessible inside the clusre functions
 var states = {};
 
@@ -25,40 +24,20 @@ router.get('/users/access', function (req, res, next) {
         code: req.query.code,
         failureRedirect: '/',
     }, function (err, accessToken, refreshToken) {
+        if (err){
+            console.log(err);
+            return res.redirect('http://localhost:3000/#/main/settings');
+        }
         if (!req.session) {
             return res.status(401).json({error: 'must be signed in'});
         }
-        User.findById(userState.id)
-            .populate("ebayAccounts")
-            .then(function (user) {
-                if (!user) {
-                    return res.sendStatus(401);
-                }
-                user.setEbayToken(accessToken, refreshToken);
-                user.save(()=>{console.log(err)}).catch();
-                var userEbayAccounts = user.getEbayAccounts();
-                if (userEbayAccounts.length > 0) {
-                    var ebayAcc = userEbayAccounts[0];
-                    ebayAcc.accessToken = accessToken;
-                    ebayAcc.refreshToken = refreshToken;
-                    states["ebayID"] = ebayAcc.id;
-                    ebayAcc.save().then(function () {
-                        return res.redirect('http://localhost:3000/#/main/settings')
-                    }).catch(next)
-                } else {
-                    var ebayAcc = new EbayAccount();
-                    ebayAcc.accessToken = accessToken;
-                    ebayAcc.refreshToken = refreshToken;
-                    states["ebayID"] = ebayAcc.id;
-
-                    ebayAcc.save().then(function () {
-                        user.addEbayAccount(ebayAcc);
-                        user.save().then(function () {
-                            return res.redirect('http://localhost:3000/#/main/settings')
-                        }).catch(next)
-                    }).catch(next)
-                }
-            }).catch(next);
+        User.findById(userState.id).then(function (user) {
+            if (!user) {
+                return res.sendStatus(401);
+            }
+            user.setEbayToken(accessToken, refreshToken);
+            user.save(()=>{return res.redirect('http://localhost:3000/#/main/settings')}).catch(next);
+        }).catch(next);
     })(req, res, next)
 });
 
