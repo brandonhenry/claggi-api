@@ -18,6 +18,20 @@ router.post('/users', function (req, res, next) {
     }).catch(next);
 });
 
+router.post('/users/manual', function(req, res, next){
+    var userState = states["user"].user;
+    if (!req.session) {
+        return res.status(401).json({error: 'must be signed in'});
+    }
+    User.findById(userState.id).then(function (user) {
+        if (!user) {
+            return res.sendStatus(401);
+        }
+        user.accessToken = req.code;
+        user.save(()=>{return res.redirect('http://localhost:3000/#/main/settings')}).catch(next);
+    }).catch(next);
+});
+
 router.get('/users/access', function (req, res, next) {
     var userState = states["user"].user;
     passport.authenticate('oauth2', {
@@ -92,7 +106,7 @@ router.post('/users/login', function (req, res, next) {
 });
 
 router.get('/user', auth.required, function (req, res, next) {
-    if (!states["user"].user){
+    if (!states["user"]){
        return res.status(422).json({error: "invalid_user"})
     }
     User.findById(req.payload.id)
