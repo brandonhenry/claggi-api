@@ -6,6 +6,10 @@ var auth = require('../auth');
 // declare states where it's accessible inside the clusre functions
 var states = {};
 
+function isLoggedIn(){
+    return states["user"];
+}
+
 router.post('/users', function (req, res, next) {
     var user = new User();
 
@@ -19,6 +23,9 @@ router.post('/users', function (req, res, next) {
 });
 
 router.post('/users/manual', function(req, res, next){
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     var userState = states["user"].user;
     if (!req.session) {
         return res.status(401).json({error: 'must be signed in'});
@@ -27,13 +34,15 @@ router.post('/users/manual', function(req, res, next){
         if (!user) {
             return res.sendStatus(401);
         }
-        console.log(req);
-        user.accessToken = req.code;
+        user.ebayToken = req.body.token;
         user.save( () => {return res.json({user:user.toAuthJSON()})}).catch(next);
     }).catch(next);
 });
 
 router.get('/users/access', function (req, res, next) {
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     var userState = states["user"].user;
     passport.authenticate('oauth2', {
         code: req.query.code,
@@ -59,6 +68,9 @@ router.get('/users/access', function (req, res, next) {
 router.get('/users/request', passport.authenticate('oauth2'));
 
 router.get('/users/revoke', function (req, res, next) {
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     var userState = states["user"].user;
     User.findById(userState.id).then(function (user) {
         user.removeAccess();
@@ -70,6 +82,9 @@ router.get('/users/revoke', function (req, res, next) {
 });
 
 router.get('/users/reset', function (req, res, next) {
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     var userState = states["user"].user;
     User.findById(userState.id).then(function (user) {
         user.removeEbayAccounts();
@@ -107,8 +122,8 @@ router.post('/users/login', function (req, res, next) {
 });
 
 router.get('/user', auth.required, function (req, res, next) {
-    if (!states["user"]){
-       return res.status(422).json({error: "invalid_user"})
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
     }
     User.findById(req.payload.id)
         .populate("ebayAccounts")
