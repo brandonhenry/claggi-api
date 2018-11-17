@@ -44,7 +44,7 @@ class Lister {
     }
 
     createOffers() {
-        return new Promise(function(resolve, reject){
+        return new Promise((resolve, reject)=>{
             //title.substring(0, 78) + '...'
             var i = 0;
             Offers.find({}).then((offer) => {
