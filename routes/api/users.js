@@ -4,7 +4,11 @@ var passport = require('passport');
 var User = mongoose.model('user');
 var auth = require('../auth');
 // declare states where it's accessible inside the clusre functions
-var states={};
+var states = {};
+
+function isLoggedIn(){
+    return states["user"];
+}
 
 router.post('/users', function (req, res, next) {
     var user = new User();
@@ -18,12 +22,36 @@ router.post('/users', function (req, res, next) {
     }).catch(next);
 });
 
+router.post('/users/manual', function(req, res, next){
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
+    var userState = states["user"].user;
+    if (!req.session) {
+        return res.status(401).json({error: 'must be signed in'});
+    }
+    User.findById(userState.id).then(function (user) {
+        if (!user) {
+            return res.sendStatus(401);
+        }
+        user.ebayToken = req.body.token;
+        user.save( () => {return res.json({user:user.toAuthJSON()})}).catch(next);
+    }).catch(next);
+});
+
 router.get('/users/access', function (req, res, next) {
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     var userState = states["user"].user;
     passport.authenticate('oauth2', {
         code: req.query.code,
         failureRedirect: '/',
     }, function (err, accessToken, refreshToken) {
+        if (err){
+            console.log(err);
+            return res.redirect('http://localhost:3000/#/main/settings');
+        }
         if (!req.session) {
             return res.status(401).json({error: 'must be signed in'});
         }
@@ -32,32 +60,35 @@ router.get('/users/access', function (req, res, next) {
                 return res.sendStatus(401);
             }
             user.setEbayToken(accessToken, refreshToken);
-            user.save().then(function(){
-                return res.redirect('http://localhost:3000/#/main/settings')
-            });
+            user.save(()=>{return res.redirect('http://localhost:3000/#/main/settings')}).catch(next);
         }).catch(next);
-
     })(req, res, next)
 });
 
 router.get('/users/request', passport.authenticate('oauth2'));
 
-router.get('/users/revoke', function(req, res, next){
+router.get('/users/revoke', function (req, res, next) {
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     var userState = states["user"].user;
-    User.findById(userState.id).then(function(user){
+    User.findById(userState.id).then(function (user) {
         user.removeAccess();
-        user.save().then(function(){
+        user.save().then(function () {
             console.log(user);
             res.redirect("http://localhost:3000/#/main/settings");
         }).catch(next);
     }).catch(next)
 });
 
-router.get('/users/reset', function (req, res, next){
+router.get('/users/reset', function (req, res, next) {
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     var userState = states["user"].user;
-    User.findById(userState.id).then(function(user){
+    User.findById(userState.id).then(function (user) {
         user.removeEbayAccounts();
-        user.save().then(function(){
+        user.save().then(function () {
             return res.status(200).redirect('http://localhost:3000/#/main/settings');
         }).catch(next)
     }).catch(next)
@@ -91,15 +122,18 @@ router.post('/users/login', function (req, res, next) {
 });
 
 router.get('/user', auth.required, function (req, res, next) {
+    if (!isLoggedIn()){
+        return res.status(422).json({error: "invalid_user"})
+    }
     User.findById(req.payload.id)
         .populate("ebayAccounts")
         .then(function (user) {
-        if (!user) {
-            return res.sendStatus(401);
-        }
+            if (!user) {
+                return res.sendStatus(401);
+            }
 
-        return res.json({user: user.toAuthJSON()});
-    }).catch(next);
+            return res.json({user: user.toAuthJSON()});
+        }).catch(next);
 });
 
 router.put('/user', auth.required, function (req, res, next) {
