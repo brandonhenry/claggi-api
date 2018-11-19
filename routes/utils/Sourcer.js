@@ -120,6 +120,7 @@ class Sourcer {
                                         brand: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Brand[0],
                                         description: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Feature[0] + '\n\n' +
                                         res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0],
+                                        productDetails: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Feature[0],
                                         image: res.ItemSearchResponse.Items[0].Item[0].ImageSets[0].ImageSet[0].HiResImage[0].URL[0],
                                         mpn: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].MPN[0],
                                         ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0],

@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 var sku = require('shortid');
 var request = require('request-promise');
-var genDesc = require('../routes/utils/Description');
+var Description = require('../routes/utils/Description');
 
 var OfferSchema = new mongoose.Schema({
     listingNumber: String,
@@ -21,6 +21,7 @@ var OfferSchema = new mongoose.Schema({
     weightUnit: String,
     brand: String,
     description: String,
+    productDetails: [],
     categoryId: String,
     image: String,
     title: String,
@@ -82,7 +83,7 @@ OfferSchema.methods.setListingID = function(listingID){
 };
 
 OfferSchema.methods.canList = function () {
-    return (this.ebayAccount && this.price)
+    return this.price && this.itemSKU;
 };
 
 OfferSchema.methods.isPublished = function (){
@@ -97,8 +98,12 @@ OfferSchema.methods.updateListingPrice = function (price) {
     this.price = price;
 };
 
+OfferSchema.methods.getTitle = function(){
+    return this.title;
+};
+
 OfferSchema.methods.formatDescription = function () {
-    return genDesc(this);
+    return Description.generate(this);
 };
 
 OfferSchema.methods.setInitialState = function (params) {
@@ -110,6 +115,7 @@ OfferSchema.methods.setInitialState = function (params) {
     this.height = (params.height / 100).toFixed(2);
     this.width = (params.width / 100).toFixed(2);
     this.length = (params.length / 100).toFixed(2);
+    this.productDetails = params.productDetails;
     this.dimensionUnit = params.dimensionUnit.split('-')[1];
     this.weight = (params.weight / 100).toFixed(2);
     this.weightUnit = params.weightUnit.split(' ')[1];
@@ -134,7 +140,7 @@ OfferSchema.methods.getProductDescription = function () {
 
 OfferSchema.methods.getProductDetails = function () {
     var productDetails = '';
-    this.productDetails.each(function (detail) {
+    this.productDetails.forEach(function (detail) {
         productDetails += `<li>${detail}</li>\n`
     });
     return productDetails;

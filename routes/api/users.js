@@ -123,7 +123,7 @@ router.post('/users/login', function (req, res, next) {
 
 router.get('/user', auth.required, function (req, res, next) {
     if (!isLoggedIn()){
-        return res.status(422).json({error: "invalid_user"})
+        return res.json({error: "invalid_user"})
     }
     User.findById(req.payload.id)
         .populate("ebayAccounts")

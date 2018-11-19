@@ -1,6 +1,8 @@
-var generate = function(listing){
-    //if (shortDescription.includes('.com'){this.removeURL(shortDescription)};
-    return `<title></title>
+module.exports = class Description{
+
+    static generate(listing){
+        //if (shortDescription.includes('.com'){this.removeURL(shortDescription)};
+        return `<title></title>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="&quot;IE=edge&quot;">
 <meta name="viewport" content="&quot;width=device-width," initial-scale="1&quot;">
@@ -190,6 +192,6 @@ var generate = function(listing){
 </div>
     
     `;
-};
 
-module.export = generate;
+    };
+};
