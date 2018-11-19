@@ -8,6 +8,9 @@ var auth = require('../auth');
 var lister = new Lister;
 var sourcer = new Sourcer;
 
+
+//-----------------------------------------INFO-----------------------------------------//
+
 router.get('/', auth.required, function (req, res, next) {
         Offers.find({}).then(function(offers){
             res.json({
@@ -19,6 +22,13 @@ router.get('/', auth.required, function (req, res, next) {
                 listerLastUpdate: lister.getLastUpdate()
             })
         }).catch(next);
+});
+
+
+//-----------------------------------------LISTER-----------------------------------------//
+
+router.get('/lister', auth.required, function(req, res, next){
+    return res.json({status: lister.getStatus()})
 });
 
 router.get('/lister/start', auth.required, function(req, res, next){
@@ -54,6 +64,13 @@ router.get('/lister/getLastUpdate', auth.required, function(req, res, next){
     return res.json({lastUpdate: lister.getLastUpdate()})
 });
 
+
+//-----------------------------------------SOURCER-----------------------------------------//
+
+router.get('/sourcer', auth.required, function(req, res, next){
+    return res.json({status: sourcer.getStatus()})
+});
+
 router.get('/sourcer/start', auth.required, function(req, res, next){
     if (sourcer.getStatus()){
         return res.json({status: sourcer.getStatus()});
@@ -65,11 +82,11 @@ router.get('/sourcer/start', auth.required, function(req, res, next){
             return res.json({error: "no user logged in "});
         }
 
-        sourcer.setEbayAccount(user.getEbayAccounts()[0])
+        sourcer.setEbayAccount(user.getEbayAccounts()[0]).then(function(){
+            sourcer.run();
+            return res.json({status: sourcer.getStatus()})
+        })
     }).catch(next);
-
-   sourcer.run();
-   return res.json({status: sourcer.getStatus()})
 });
 
 router.get('/sourcer/stop', auth.required, function(req, res, next){
@@ -80,12 +97,12 @@ router.get('/sourcer/stop', auth.required, function(req, res, next){
     return res.json({status: sourcer.getStatus()})
 });
 
-router.get('/sourcer', auth.required, function(req, res, next){
-    return res.json({status: sourcer.getStatus()})
-});
+//-----------------------------------------OFFERS-----------------------------------------//
 
-router.get('/lister', auth.required, function(req, res, next){
-    return res.json({status: lister.getStatus()})
+router.get('/offers', auth.required, function(req, res, next){
+    Offers.find({}).then(function(offers){
+        return res.json({data: offers});
+    }).catch(next);
 });
 
 module.exports = router;

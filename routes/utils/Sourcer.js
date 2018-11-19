@@ -21,6 +21,9 @@ class Sourcer {
 
     setEbayAccount(ebayAccount) {
         this.ebayAccount = ebayAccount;
+        return new Promise((resolve, reject) => {
+            resolve(this.ebayAccount);
+        })
     }
 
     run() {
