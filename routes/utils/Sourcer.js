@@ -2,6 +2,7 @@ var request = require('request');
 var EbayAPI = require('./Ebay');
 var mongoose = require('mongoose');
 var Offers = mongoose.model('offers');
+var sku = require('shortid');
 
 // Amazon Constants
 let OperationHelper = require('apac').OperationHelper;
@@ -125,7 +126,8 @@ class Sourcer {
                                         mpn: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].MPN[0],
                                         ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0],
                                         published: false,
-                                        created: false
+                                        created: false,
+                                        itemSKU: sku.generate()
                                     };
                                     Offers.create(params, (err) => {if (err) {console.log(err) } resolve(true)});
 

@@ -73,9 +73,10 @@ class Lister {
             var i = 0;
             Offers.find({}).then(async (offer) => {
                 var itemsLen = offer.length;
+                console.log("unlisted listings: " + itemsLen);
                 // offer.forEach(async (item) => {
                     ++i;
-                    var item = offer[4];
+                    var item = offer[5];
                     if (!this.active) {
                         return;
                     }
