@@ -6,7 +6,7 @@ var Description = require('../routes/utils/Description');
 
 var OfferSchema = new mongoose.Schema({
     listingNumber: String,
-    itemSKU: String,
+    itemSKU: {type: String, unique: true},
     source: String,
     sourceID: {type: String, unique: true},
     sourcePrice: {type: Number, min: 11},
@@ -34,7 +34,9 @@ var OfferSchema = new mongoose.Schema({
     fulfillmentPolicy: String,
     listingID: String,
     price: Number,
-    profit: String,
+    profit: Number,
+    inventoryItemMade: Boolean,
+    offerMade: Boolean,
     published: Boolean,
     created: Boolean,
     offerID: String
@@ -83,19 +85,30 @@ OfferSchema.methods.setListingID = function(listingID){
 };
 
 OfferSchema.methods.canList = function () {
-    return this.price && this.itemSKU;
+    return this.price && this.itemSKU && this.inventoryItemMade && !this.offerMade;
 };
 
 OfferSchema.methods.isPublished = function (){
     return this.published;
 };
 
-OfferSchema.methods.isCreated = function (){
-    return this.created;
+OfferSchema.methods.isOfferCreated = function (){
+    return this.offerMade;
+};
+
+OfferSchema.methods.isInventoryItemCreated = function (){
+    return this.inventoryItemMade;
 };
 
 OfferSchema.methods.updateListingPrice = function (price) {
     this.price = price;
+};
+
+OfferSchema.methods.updateOfferLocation = async function(){
+  if (this.offerMade){
+      return await this.request("PUT", "https://api.ebay.com/sell/inventory/v1/offer/" + this.offerID,
+          {"merchantLocationKey" : this.ebayAccount.merchantLocationKey})
+  }
 };
 
 OfferSchema.methods.getTitle = function(){
@@ -104,30 +117,6 @@ OfferSchema.methods.getTitle = function(){
 
 OfferSchema.methods.formatDescription = function () {
     return Description.generate(this);
-};
-
-OfferSchema.methods.setInitialState = function (params) {
-    this.source = params.source;
-    this.sourceID = params.sourceID;
-    this.itemSKU = sku.generate();
-    this.ebayAccount = params.ebayAccount;
-    this.sourcePrice = params.sourcePrice.replace('$', '');
-    this.height = (params.height / 100).toFixed(2);
-    this.width = (params.width / 100).toFixed(2);
-    this.length = (params.length / 100).toFixed(2);
-    this.productDetails = params.productDetails;
-    this.dimensionUnit = params.dimensionUnit.split('-')[1];
-    this.weight = (params.weight / 100).toFixed(2);
-    this.weightUnit = params.weightUnit.split(' ')[1];
-    this.brand = params.brand;
-    this.description = params.description;
-    this.image = params.image;
-    this.title = params.title;
-    this.categoryId = getCategory(this.title);
-    this.mpn = params.mpn;
-    this.ean = params.ean;
-    this.published = params.published;
-    this.created = params.created;
 };
 
 OfferSchema.methods.configure = function (params) {
@@ -146,7 +135,7 @@ OfferSchema.methods.getProductDetails = function () {
     return productDetails;
 };
 
-OfferSchema.methods.toRequestPayload = function () {
+OfferSchema.methods.toOfferJSON = function () {
     return {
         /* EbayOfferDetailsWithKeys */
         "availableQuantity": this.quantity,
@@ -159,21 +148,73 @@ OfferSchema.methods.toRequestPayload = function () {
                 "returnPolicyId": this.returnPolicy,
                 "fulfillmentPolicyId": this.fulfillmentPolicy,
             },
-        "merchantLocationKey": "string",
+        "merchantLocationKey": this.merchantLocationKey,
         "pricingSummary":
             {
                 /* PricingSummary */
                 "price":
                     {
                         /* Amount */
-                        "value": this.price,
-                        "currency": "USD"
+                        "currency": "USD",
+                        "value": this.price
                     }
             },
         "quantityLimitPerBuyer": 3,
         "sku": this.itemSKU,
         "marketplaceId": "EBAY_US",
         "format": "FIXED_PRICE"
+    }
+};
+
+
+OfferSchema.methods.toInventoryItemJSON = function () {
+    var dimensionEnumValue = "";
+    if (this.dimensionUnit === "inches"){
+        dimensionEnumValue = "INCH";
+    }
+    return {
+        /* InventoryItem */
+        "availability":
+            {
+                /* Availability */
+                "shipToLocationAvailability":
+                    {
+                        /* ShipToLocationAvailability */
+                        "quantity": 3
+                    }
+            },
+        "condition": "NEW",
+        "packageWeightAndSize":
+            {
+                /* PackageWeightAndSize */
+                "dimensions":
+                    {
+                        /* Dimension */
+                        "height": this.height,
+                        "length": this.length,
+                        "unit": dimensionEnumValue,
+                        "width": this.width
+                    },
+                "weight":
+                    {
+                        /* Weight */
+                        "unit": "POUND",
+                        "value": this.weight
+                    }
+            },
+        "product":
+            {
+                /* Product */
+                "brand": this.brand,
+                "imageUrls": [
+                    this.image
+                ],
+                "mpn": this.mpn,
+                "title": this.title,
+                "ean": [
+                    this.ean
+                ]
+            }
     }
 };
 

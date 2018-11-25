@@ -9,7 +9,7 @@ router.post('/updateUser', auth.required, function (req, res, next) {
     EbayAccount.findById(states.ebayID).then(function (ebayAcc) {
         console.log(req.body);
         ebayAcc.username = req.body.name;
-        ebayAcc.save().then(function(){
+        ebayAcc.save().then(function () {
             return res.status(200).json({status: "set"});
         }).catch(next)
     }).catch(next)
@@ -53,7 +53,7 @@ router.get('/', auth.required, function (req, res, next) {
     User.findById(req.payload.id)
         .populate("ebayAccounts")
         .then(function (user) {
-            if (!user){
+            if (!user) {
                 return res.status(422).json({error: "no user logged in"})
             }
 
@@ -77,10 +77,11 @@ router.put('/update', function (req, res, next) {
 //-----------------------------------------FULFILLMENT-----------------------------------------//
 
 router.get('/fulfillment/orders', auth.required, function (req, res, next) {
+    delete req.body.__v;
     User.findById(req.payload.id)
         .populate("ebayAccounts")
         .then(async function (user) {
-            if (!user){
+            if (!user) {
                 return res.status(422).json({error: "no user logged in"})
             }
             var ebayAcc = user.getEbayAccounts()[0];
@@ -93,13 +94,84 @@ router.get('/fulfillment/orders', auth.required, function (req, res, next) {
 
 //-------------------------------------------ACCOUNT-------------------------------------------//
 
-router.get('/account/privileges', function (req, res, next) {
-    EbayAccount.findById(states["ebayID"]).then(async function (ebayAcc) {
-        if (!ebayAcc) {
-            return res.status(422).json({errors: "no ebay account found"})
-        }
-        return res.json(await ebayAcc.getPrivileges());
-    }).catch(next)
+router.get('/account/privileges', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.getPrivileges());
+        }).catch(next);
+});
+
+router.get('/account/updatePolicies', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            ebayAcc.fulfillmentPolicies = [];
+            ebayAcc.paymentPolicies = [];
+            ebayAcc.returnPolicies = [];
+            await ebayAcc.getFulfillmentPolicies().then(async (res) => {
+                console.log(res);
+                res.fulfillmentPolicies.forEach(async (policy) => {
+                    await ebayAcc.addPolicy("fulfillment", [{
+                        name: policy.name,
+                        policyId: policy.fulfillmentPolicyId
+                    }]);
+                });
+            });
+            await ebayAcc.getReturnPolicies().then(async (res) => {
+                res.returnPolicies.forEach(async (policy) => {
+                    await ebayAcc.addPolicy("return", [{
+                        name: policy.name,
+                        policyId: policy.returnPolicyId
+                    }]);
+                });
+            });
+            await ebayAcc.getPaymentPolicies().then(async (res) => {
+                res.paymentPolicies.forEach(async (policy) => {
+                    await ebayAcc.addPolicy("payment", [{
+                        name: policy.name,
+                        policyId: policy.paymentPolicyId
+                    }]);
+                });
+            });
+            ebayAcc.save(() => {
+                return res.json(ebayAcc.toAuthJSON())
+            })
+        }).catch(next);
+});
+
+router.post('/account/updatePolicies', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            await ebayAcc.setFulfillmentPolicy(req.body.fulfillmentPolicy.policyId);
+            await ebayAcc.setPaymentPolicy(req.body.paymentPolicy.policyId);
+            await ebayAcc.setReturnPolicy(req.body.returnPolicy.policyId);
+            ebayAcc.save(() => {
+                return res.json(ebayAcc.toAuthJSON())
+            })
+        }).catch(next);
 });
 
 //-------------------------------------------ANALYTICS-------------------------------------------//
@@ -128,7 +200,7 @@ router.get('/inventory/', auth.required, function (req, res, next) {
     User.findById(req.payload.id)
         .populate("ebayAccounts")
         .then(async function (user) {
-            if (!user){
+            if (!user) {
                 return res.status(422).json({error: "no user logged in"})
             }
             var ebayAcc = user.getEbayAccounts()[0];
@@ -136,6 +208,97 @@ router.get('/inventory/', auth.required, function (req, res, next) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
             return res.json(await ebayAcc.getInventoryItems());
+        }).catch(next);
+});
+
+router.post('/inventory/sku', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.getInventoryItem(req.body.sku));
+        }).catch(next);
+});
+
+router.post('/inventory/offer', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.getOffer(req.body.offerid));
+        }).catch(next);
+});
+
+router.post('/inventory/publishOffer', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.publishOffer(req.body.offerid));
+        }).catch(next);
+});
+
+router.post('/inventory/updateOffer', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.updateOffer(req.body.offerid, {"merchantLocationKey": ebayAcc.merchantLocationKey}));
+        }).catch(next);
+});
+
+router.post('/inventory/createLocation', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            console.log(req.body.location);
+            return res.json(await ebayAcc.createLocation(req.body.location));
+        }).catch(next);
+});
+
+router.post('/inventory/getLocation', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.getLocation());
         }).catch(next);
 });
 

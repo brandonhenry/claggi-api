@@ -2,7 +2,7 @@ var request = require('request');
 var EbayAPI = require('./Ebay');
 var mongoose = require('mongoose');
 var Offers = mongoose.model('offers');
-var sku = require('shortid');
+var sku = require('./SkuGenerator');
 
 // Amazon Constants
 let OperationHelper = require('apac').OperationHelper;
@@ -17,6 +17,7 @@ class Sourcer {
         this.active = false;
         this.lastScan = 'No scan yet..';
         this.ebayAccount = null;
+        this.margin = 0.4;
     }
 
     setEbayAccount(ebayAccount) {
@@ -43,6 +44,13 @@ class Sourcer {
 
     getLastScan() {
         return this.lastScan;
+    }
+
+    getPrice(price){
+        var calcPrice;
+        calcPrice = Number(price) + (Number(price) * this.margin);
+        calcPrice = calcPrice.toFixed(2);
+        return calcPrice;
     }
 
     queue() {
@@ -92,7 +100,7 @@ class Sourcer {
                 resolve(undefined);
             })
         } else {
-            return new Promise(function (resolve, reject) {
+            return new Promise((resolve, reject) => {
                 let opHelper = new OperationHelper({
                     awsId: azAwsId,
                     awsSecret: azAccessKey,
@@ -106,15 +114,17 @@ class Sourcer {
                     'ResponseGroup': 'Medium',
                 }).then((response) => {
                     parseString(response.responseBody, // noinspection JSAnnotator
-                        async function (err, res) {
+                        async (err, res) => {
                             try {
                                 if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]) {
                                     let params = {
                                         source: "amazon",
                                         ebayAccount: i.ebayAccount,
+                                        merchantLocationKey: i.ebayAccount.getMerchantLocationKey(),
                                         sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0],
                                         title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0],
                                         sourcePrice: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice[0].replace('$', ''),
+                                        price: this.getPrice(res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ListPrice[0].FormattedPrice[0].replace('$', '')),
                                         height: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._ / 100).toFixed(2),
                                         width: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._ / 100).toFixed(2),
                                         length: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0]._ / 100).toFixed(2),
@@ -130,7 +140,11 @@ class Sourcer {
                                         ean: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].EAN[0],
                                         published: false,
                                         created: false,
-                                        itemSKU: sku.generate()
+                                        itemSKU: sku.generate(),
+                                        paymentPolicy: i.ebayAccount.getPaymentPolicy(),
+                                        returnPolicy: i.ebayAccount.getReturnPolicy(),
+                                        fulfillmentPolicy: i.ebayAccount.getFulfillmentPolicy()
+
                                     };
                                     Offers.create(params, (err) => {if (err) {console.log(err) } resolve(true)});
 

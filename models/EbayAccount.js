@@ -10,7 +10,15 @@ var EbayAccount = new mongoose.Schema({
     balance: String,
     listings: {},
     orders: {},
-    lister: [{type: Lister}]
+    lister: [{type: Lister}],
+    merchantLocationKey: String,
+    fulfillmentPolicies: [],
+    paymentPolicies: [],
+    returnPolicies: [],
+    activeFulfillment: String,
+    activeReturn: String,
+    activePayment: String,
+
 }, {timestamp: true});
 
 EbayAccount.methods.toAuthJSON = function () {
@@ -18,7 +26,13 @@ EbayAccount.methods.toAuthJSON = function () {
         username: this.username,
         listings: this.listings,
         orders: this.orders,
-        balance: this.balance
+        balance: this.balance,
+        fulfillmentPolicies: this.fulfillmentPolicies,
+        paymentPolicies: this.paymentPolicies,
+        returnPolicies: this.returnPolicies,
+        activePayment: this.activePayment,
+        activeFulfillment: this.activeFulfillment,
+        activeReturn: this.activeReturn
     }
 };
 
@@ -42,7 +56,54 @@ EbayAccount.methods.getAccessToken = function () {
     return this.accessToken;
 };
 
-EbayAccount.methods.request = function (method, uri, params) {
+EbayAccount.methods.getMerchantLocationKey = function(){
+    return this.merchantLocationKey;
+};
+
+EbayAccount.methods.setFulfillmentPolicy = async function(policyId){
+  this.activeFulfillment = policyId;
+};
+
+EbayAccount.methods.getMerchantLocationKey = async function(){
+    return this.merchantLocationKey;
+};
+
+EbayAccount.methods.setReturnPolicy = async function(policyId){
+    this.activeReturn = policyId;
+};
+
+EbayAccount.methods.setPaymentPolicy = async function(policyId){
+    this.activePayment = policyId;
+};
+
+EbayAccount.methods.getPaymentPolicy = function() {
+   return this.activePayment;
+};
+
+EbayAccount.methods.getReturnPolicy = function(){
+    return this.activeReturn;
+};
+
+EbayAccount.methods.getFulfillmentPolicy = function(){
+    return this.activeFulfillment;
+};
+
+EbayAccount.methods.addPolicy = async function(type, policy){
+    switch (type){
+        case "fulfillment":
+            this.fulfillmentPolicies = this.fulfillmentPolicies.concat(policy);
+            break;
+        case "payment":
+            this.paymentPolicies = this.paymentPolicies.concat(policy);
+            break;
+        case "return":
+            this.returnPolicies = this.fulfillmentPolicies.concat(policy);
+            break;
+    }
+    this.save(()=>{return new Promise((resolve, reject)=>{resolve(true)})});
+};
+
+EbayAccount.methods.request = async function (method, uri, params) {
     var token = this.accessToken;
     var ebayAccount = this;
     var options = {};
@@ -68,7 +129,7 @@ EbayAccount.methods.request = function (method, uri, params) {
                 var error = JSON.parse(rawJSON.replace(/\\/g, "").replace("[", "").replace("]", ""));
             } catch (err) {
                 console.log(rawJSON);
-                return resolve(rawJSON);
+                return resolve({error: rawJSON});
             }
 
             if (error.errors.message === 'Invalid access token') {
@@ -109,6 +170,36 @@ EbayAccount.methods.getPrivileges = async function () {
     return await this.request("GET", "https://api.ebay.com/sell/account/v1/privilege/")
 };
 
+/**
+ *    This method retrieves all the fulfillment policies configured for the marketplace you specify.
+ *
+ *    https://developer.ebay.com/api-docs/sell/account/resources/fulfillment_policy/methods/getFulfillmentPolicies
+ */
+EbayAccount.methods.getFulfillmentPolicies = async function () {
+    return await this.request("GET", "https://api.ebay.com/sell/account/v1/fulfillment_policy?marketplace_id=EBAY_US")
+};
+
+
+/**
+ *    This method retrieves all the payment policies configured for the marketplace you specify.
+ *
+ *    https://developer.ebay.com/api-docs/sell/account/resources/payment_policy/methods/getPaymentPolicies
+ */
+EbayAccount.methods.getPaymentPolicies = async function () {
+    return await this.request("GET", "https://api.ebay.com/sell/account/v1/payment_policy?marketplace_id=EBAY_US")
+};
+
+
+/**
+ *    This method retrieves all the return policies configured for the marketplace you specify .
+ *
+ *    https://developer.ebay.com/api-docs/sell/account/resources/return_policy/methods/getReturnPolicies
+ */
+EbayAccount.methods.getReturnPolicies = async function () {
+    return await this.request("GET", "https://api.ebay.com/sell/account/v1/return_policy?marketplace_id=EBAY_US")
+};
+
+
 //-------------------------------------------ANALYTICS-------------------------------------------//
 
 /**
@@ -142,9 +233,34 @@ EbayAccount.methods.getTrafficReport = async function (params) {
  * https://developer.ebay.com/api-docs/sell/inventory/resources/inventory_item/methods/getInventoryItems
  */
 EbayAccount.methods.getInventoryItems = async function () {
-    var listings = await this.request("GET", "https://api.ebay.com/sell/inventory/v1/inventory_item");
-    this.listings = listings;
-    return listings
+    return await this.request("GET", "https://api.ebay.com/sell/inventory/v1/inventory_item?limit=100&offset=0")
+};
+
+/**
+ *    This call retrieves all inventory item records defined for the seller's account.
+ *
+ * https://developer.ebay.com/api-docs/sell/inventory/resources/inventory_item/methods/getInventoryItems
+ */
+EbayAccount.methods.getInventoryItem = async function (sku) {
+    return await this.request("GET", `https://api.ebay.com/sell/inventory/v1/inventory_item/${sku}`)
+};
+
+/**
+ *    This call creates a new inventory item record or replaces an existing inventory item record.
+ *
+ * https://developer.ebay.com/api-docs/sell/inventory/resources/inventory_item/methods/createOrReplaceInventoryItem
+ */
+EbayAccount.methods.createOrReplaceInventoryItem = async function (sku, payload) {
+    return await this.request("PUT", `https://api.ebay.com/sell/inventory/v1/inventory_item/${sku}`, payload);
+};
+
+/**
+ * This call creates an offer for a specific inventory item on a specific eBay marketplace.
+ *
+ * https://developer.ebay.com/api-docs/sell/inventory/resources/offer/methods/getOffer
+ */
+EbayAccount.methods.getOffer = async function (offerId) {
+    return await this.request("GET", "https://api.ebay.com/sell/inventory/v1/offer/" + offerId);
 };
 
 /**
@@ -162,8 +278,8 @@ EbayAccount.methods.createOffer = async function (payload) {
  *
  * https://developer.ebay.com/api-docs/sell/inventory/resources/offer/methods/updateOffer
  */
-EbayAccount.methods.updateOffer = async function (productID) {
-    return await this.request("PUT", "https://api.ebay.com/sell/inventory/v1/offer/" + productID);
+EbayAccount.methods.updateOffer = async function (productID, payload) {
+    return await this.request("PUT", "https://api.ebay.com/sell/inventory/v1/offer/" + productID, payload);
 };
 
 /**
@@ -173,7 +289,7 @@ EbayAccount.methods.updateOffer = async function (productID) {
  * https://developer.ebay.com/api-docs/sell/inventory/resources/offer/methods/publishOffer
  */
 EbayAccount.methods.publishOffer = async function (productID) {
-    return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer/" + productID);
+    return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer/" + productID + "/publish/");
 };
 
 /**
@@ -183,6 +299,17 @@ EbayAccount.methods.publishOffer = async function (productID) {
  */
 EbayAccount.methods.getListingFees = async function () {
     return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer/get_listing_fees");
+};
+
+EbayAccount.methods.createLocation = async function(payload) {
+    this.merchantLocationKey = payload.name;
+    this.save(async ()=>{
+        return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/location/" + payload.name, payload);
+    });
+};
+
+EbayAccount.methods.getLocation = async function() {
+    return await this.request("GET", "https://api.ebay.com/sell/inventory/v1/location");
 };
 
 mongoose.model('ebayaccount', EbayAccount);

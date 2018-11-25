@@ -9,6 +9,7 @@ class Lister {
         this.active = false;
         this.lastUpdate = 'No data..';
         this.margin = 0.4;
+        this.itemIndex = 0;
     }
 
     async grabEbayListings() {
@@ -24,8 +25,12 @@ class Lister {
         }
 
         this.active = true;
-        this.createOffers().then(() => {
-            this.queueCreateOffers();
+        this.createInventoryItem().then(() => {
+            this.createOffer().then(() => {
+                this.publishOffers().then(() => {
+
+                })
+            })
         });
         // this.publishOffers();
     }
@@ -42,21 +47,12 @@ class Lister {
         return this.lastUpdate;
     }
 
-    setPrice(listing){
+    setPrice(listing) {
         listing.price = listing.sourcePrice + (listing.sourcePrice * this.margin);
-        return listing.save(function(){
-            return new Promise((resolve, reject)=>{
+        return listing.save(function () {
+            return new Promise((resolve, reject) => {
                 resolve(true);
             })
-        })
-    }
-
-    setSKU(listing){
-        listing.itemSKU = sku.generate();
-        return listing.save(function(){
-            return new Promise(((resolve, reject) => {
-                resolve(true);
-            }))
         })
     }
 
@@ -67,52 +63,89 @@ class Lister {
         })
     }
 
-    createOffers() {
-        return new Promise((resolve, reject)=>{
-            //title.substring(0, 78) + '...'
+    createInventoryItem() {
+        if (!this.active) {return;}
+        return new Promise((resolve, reject) => {
             var i = 0;
             Offers.find({}).then(async (offer) => {
-                var itemsLen = offer.length;
-                console.log("unlisted listings: " + itemsLen);
-                // offer.forEach(async (item) => {
+                offer.forEach(async (item) => {
                     ++i;
-                    var item = offer[5];
-                    if (!this.active) {
-                        return;
+                    if (!this.isDuplicate(item)) {
+                        await this.ebayAccount.createOrReplaceInventoryItem(item.itemSKU, await item.toInventoryItemJSON())
+                            .then(function () {
+                                item.inventoryItemMade = true;
+                                item.save(() => {});
+                            }).catch((err) => {console.log(err);});
                     }
-                    if (!this.isDuplicate(item) && item.canList() && !item.isCreated()) {
-                        await this.ebayAccount.createOffer(await item.toRequestPayload())
+                    if (i === offer.length){return resolve(true)}
+                });
+            }).catch((err) => {console.log(err)});
+        })
+    }
+
+    createOffer() {
+        if (!this.active) {return;}
+        return new Promise((resolve, reject) => {
+            var i = 0;
+            Offers.find({}).then(async (offer) => {
+                offer.forEach(async (item) => {
+                    ++i;
+                    if (!this.isDuplicate(item) && item.canList()) {
+                        await this.ebayAccount.createOffer(await item.toOfferJSON())
                             .then(function (res) {
-                                if (res.errors){
-                                    console.log(res.errors);
-                                } else {
-                                    console.log(res);
+                                if (res.errors || res.error) {
+                                    // resolve(console.log({errors: res.errors, error: res.error}))
+                                } else if (res.offerId) {
+                                    console.log("OfferID: " + res.offerId);
                                     item.setOfferID(res.offerId);
                                     item.setCreated(true);
-                                    item.save(function (err) {
-                                        console.log(err);
-                                    });
+                                    item.save(() => {});
+                                } else {
+                                    resolve(console.log("error!"))
                                 }
-                            }).catch();
-                    } else {
-                        if (this.isDuplicate()) {
-                            console.log('This item is a duplicate');
-                        } else if (!item.canList()) {
-                            console.log("Item can't be listed because no sku or price.")
-                            if (!item.price){
-                                this.setPrice(item).then();
-                            }
-                            if (!item.itemSKU){
-                                this.setSKU(item).then();
-                            }
-                        } else {
-                            console.log("Item created already? " + item.isCreated())
-                        }
+                            }).catch((err) => {resolve(console.log(err))});
                     }
-                    resolve(true);
-                // });
-            }).catch((err)=>{console.log(err)});
+                    if (i === offer.length){return resolve(true)}
+                });
+            }).catch((err) => {console.log(err)});
         })
+    }
+
+    publishOffers() {
+        if (!this.active) {return;}
+        return new Promise((resolve, reject) => {
+            var i = 0;
+            Offers.find({}).then(async (offer) => {
+                offer.each(async (item) => {
+                    i++;
+                    if (!this.isDuplicate(item) && !item.isPublished() && item.offerID) {
+                        await this.ebayAccount.publishOffer(await item.getOfferID())
+                            .then(function (res) {
+                                if (res.errors || res.error) {
+                                    // resolve(console.log({errors: res.errors, error: res.error}))
+                                } else if (res.listingID) {
+                                    item.setListingID(res.listingID);
+                                    item.setPublished(true);
+                                    item.save(() => { });
+                                }
+                            }).catch((err) => { resolve(console.log(err)) });
+                    } else {
+                        reject(false);
+                    }
+                    if (i === offer.length){return resolve(true)}
+                });
+            }).catch((err)=>{resolve(console.log(err))});
+        })
+    }
+
+    queueCreateInventoryItem() {
+        var delay = 600000; // 10 minutes;
+        this.lastUpdate = new Date().toLocaleTimeString();
+        if (this.active) {
+            setInterval(() => {
+                this.createInventoryItem()
+            }, delay);
+        }
     }
 
     queueCreateOffers() {
@@ -120,7 +153,7 @@ class Lister {
         this.lastUpdate = new Date().toLocaleTimeString();
         if (this.active) {
             setInterval(() => {
-                this.createOffers()
+                this.createInventoryItem()
             }, delay);
         }
     }
@@ -136,7 +169,7 @@ class Lister {
     isDuplicate(unpubListing) {
         var isDuplicate = false;
         this.grabEbayListings().then(function (listings) {
-            if (listings.size === 0){
+            if (listings.size === 0 || listings.inventoryItems === undefined || unpubListing === undefined) {
                 return isDuplicate;
             } else {
                 listings.inventoryItems.forEach(function (listing) {
@@ -150,23 +183,6 @@ class Lister {
         });
 
         return isDuplicate;
-    }
-
-    publishOffers() {
-        //title.substring(0, 78) + '...'
-        Offers.find({}).then((offer) => {
-            offer.each(async (item) => {
-                if (!this.isDuplicate(item) && !item.isPublished()) {
-                    await this.ebayAccount.publishOffer(await item.getOfferID())
-                        .then(function (listingID) {
-                            item.setListingID(listingID);
-                            item.setPublished(true);
-                            item.save();
-                        }).catch();
-                }
-            });
-        }).catch();
-        this.queuePublishOffers();
     }
 }
 
