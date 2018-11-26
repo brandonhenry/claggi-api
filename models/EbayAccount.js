@@ -18,6 +18,7 @@ var EbayAccount = new mongoose.Schema({
     activeFulfillment: String,
     activeReturn: String,
     activePayment: String,
+    defaultCategoryTreeId: String
 
 }, {timestamp: true});
 
@@ -66,6 +67,13 @@ EbayAccount.methods.setFulfillmentPolicy = async function(policyId){
 
 EbayAccount.methods.getMerchantLocationKey = async function(){
     return this.merchantLocationKey;
+};
+
+EbayAccount.methods.setDefaultCategory = async function(){
+    return this.request('GET', "https://api.ebay.com/commerce/taxonomy/v1_beta/get_default_category_tree_id?marketplace_id=EBAY_US")
+        .then((res) => {
+            this.defaultCategoryTreeId = res.categoryTreeID;
+        })
 };
 
 EbayAccount.methods.setReturnPolicy = async function(policyId){
@@ -316,30 +324,10 @@ EbayAccount.methods.getLocation = async function() {
 
 
 EbayAccount.methods.getCategory = function (title) {
-    var token = this.accessToken;
-    request({
-        "method": 'GET',
-        "uri": 'https://api.ebay.com/commerce/taxonomy/v1_beta/get_default_category_tree_id?\n' +
-        'marketplace_id=EBAY_US',
-        "json": true,
-        "headers": {
-            "Authorization": "Bearer " + token
-        }
-    }).then(function (res) {
-        var categoryTreeID = res.categoryTreeID;
-        var uri = 'https://api.ebay.com/commerce/taxonomy/v1_beta/category_tree/'
-            + categoryTreeID
-            + '/get_category_suggestions?q='
-            + title;
-
-        request({
-            "method": 'GET',
-            "uri": uri,
-            "json": true
-        }).then(function (results) {
+        var uri = 'https://api.ebay.com/commerce/taxonomy/v1_beta/category_tree/' + this.defaultCategoryTreeId + '/get_category_suggestions?q=' + title;
+        this.request("GET", uri).then((results) => {
             return results.categorySuggestions[0].category.categoryId;
         }).catch()
-    }).catch()
 };
 
 mongoose.model('ebayaccount', EbayAccount);
