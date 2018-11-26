@@ -135,7 +135,7 @@ OfferSchema.methods.getProductDetails = function () {
     return productDetails;
 };
 
-OfferSchema.methods.toOfferJSON = function () {
+OfferSchema.methods.toOfferJSON = function (merchantLocationKey) {
     return {
         /* EbayOfferDetailsWithKeys */
         "availableQuantity": this.quantity,
@@ -148,7 +148,7 @@ OfferSchema.methods.toOfferJSON = function () {
                 "returnPolicyId": this.returnPolicy,
                 "fulfillmentPolicyId": this.fulfillmentPolicy,
             },
-        "merchantLocationKey": this.merchantLocationKey,
+        "merchantLocationKey": merchantLocationKey,
         "pricingSummary":
             {
                 /* PricingSummary */
@@ -216,33 +216,6 @@ OfferSchema.methods.toInventoryItemJSON = function () {
                 ]
             }
     }
-};
-
-var getCategory = function (title) {
-    var token = this.ebayAccount.getAccessToken();
-    request({
-        "method": 'GET',
-        "uri": 'https://api.ebay.com/commerce/taxonomy/v1_beta/get_default_category_tree_id?\n' +
-        'marketplace_id=EBAY_US',
-        "json": true,
-        "headers": {
-            "Authorization": "Bearer " + token
-        }
-    }).then(function (res) {
-        var categoryTreeID = res.categoryTreeID;
-        var uri = 'https://api.ebay.com/commerce/taxonomy/v1_beta/category_tree/'
-            + categoryTreeID
-            + '/get_category_suggestions?q='
-            + title;
-
-        request({
-            "method": 'GET',
-            "uri": uri,
-            "json": true
-        }).then(function (results) {
-            return results.categorySuggestions[0].category.categoryId;
-        }).catch()
-    }).catch()
 };
 
 mongoose.model('offers', OfferSchema);

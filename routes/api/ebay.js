@@ -267,7 +267,26 @@ router.post('/inventory/updateOffer', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.updateOffer(req.body.offerid, {"merchantLocationKey": ebayAcc.merchantLocationKey}));
+            return res.json(await ebayAcc.updateOffer(req.body.offerid, {
+                "merchantLocationKey": ebayAcc.merchantLocationKey,
+                "pricingSummary":
+                    {
+                        /* PricingSummary */
+                        "price":
+                            {
+                                /* Amount */
+                                "currency": "USD",
+                                "value": "40"
+                            }
+                    },
+                "listingPolicies":
+                    {
+                        /* ListingPolicies */
+                        "paymentPolicyId": ebayAcc.activePayment,
+                        "returnPolicyId": ebayAcc.activeReturn,
+                        "fulfillmentPolicyId": ebayAcc.activeFulfillment,
+                    },
+            }));
         }).catch(next);
 });
 

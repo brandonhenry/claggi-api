@@ -91,7 +91,7 @@ class Lister {
                 offer.forEach(async (item) => {
                     ++i;
                     if (!this.isDuplicate(item) && item.canList()) {
-                        await this.ebayAccount.createOffer(await item.toOfferJSON())
+                        await this.ebayAccount.createOffer(await item.toOfferJSON(this.ebayAccount.getMerchantLocationKey()))
                             .then(function (res) {
                                 if (res.errors || res.error) {
                                     // resolve(console.log({errors: res.errors, error: res.error}))

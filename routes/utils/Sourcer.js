@@ -143,7 +143,8 @@ class Sourcer {
                                         itemSKU: sku.generate(),
                                         paymentPolicy: i.ebayAccount.getPaymentPolicy(),
                                         returnPolicy: i.ebayAccount.getReturnPolicy(),
-                                        fulfillmentPolicy: i.ebayAccount.getFulfillmentPolicy()
+                                        fulfillmentPolicy: i.ebayAccount.getFulfillmentPolicy(),
+                                        categoryId: i.ebayAccount.getCategory(res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0])
 
                                     };
                                     Offers.create(params, (err) => {if (err) {console.log(err) } resolve(true)});
