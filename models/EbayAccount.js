@@ -59,54 +59,73 @@ EbayAccount.methods.getAccessToken = function () {
     return this.accessToken;
 };
 
-EbayAccount.methods.getMerchantLocationKey = function(){
+EbayAccount.methods.getMerchantLocationKey = function () {
     return this.merchantLocationKey;
 };
 
-EbayAccount.methods.setFulfillmentPolicy = async function(policyId){
-  this.activeFulfillment = policyId;
+EbayAccount.methods.setFulfillmentPolicy = async function (policyId) {
+    this.activeFulfillment = policyId;
 };
 
-EbayAccount.methods.getMerchantLocationKey = async function(){
+EbayAccount.methods.getMerchantLocationKey = async function () {
     return this.merchantLocationKey;
 };
 
 EbayAccount.methods.setLocation = function (location) {
     this.merchantLocationKey = location;
-    this.save((res)=>{})
+    this.save((res) => {
+    })
 };
 
-EbayAccount.methods.setDefaultCategory = async function(){
+EbayAccount.methods.setDefaultCategory = async function () {
     return this.request('GET', "https://api.ebay.com/commerce/taxonomy/v1_beta/get_default_category_tree_id?marketplace_id=EBAY_US")
         .then((res) => {
             console.log(res);
             this.defaultCategoryTreeId = res.categoryTreeId;
-            this.save(()=>{return true})
+            this.save(() => {
+                return true
+            })
         })
 };
 
-EbayAccount.methods.setReturnPolicy = async function(policyId){
+EbayAccount.methods.setReturnPolicy = async function (policyId) {
     this.activeReturn = policyId;
 };
 
-EbayAccount.methods.setPaymentPolicy = async function(policyId){
+EbayAccount.methods.setPaymentPolicy = async function (policyId) {
     this.activePayment = policyId;
 };
 
-EbayAccount.methods.getPaymentPolicy = function() {
-   return this.activePayment;
+EbayAccount.methods.getPaymentPolicy = function () {
+    return this.activePayment;
 };
 
-EbayAccount.methods.getReturnPolicy = function(){
+EbayAccount.methods.getReturnPolicy = function () {
     return this.activeReturn;
 };
 
-EbayAccount.methods.getFulfillmentPolicy = function(){
+EbayAccount.methods.getFulfillmentPolicy = function () {
     return this.activeFulfillment;
 };
 
-EbayAccount.methods.addPolicy = async function(type, policy){
-    switch (type){
+EbayAccount.methods.refreshAccessToken = function () {
+    return new Promise((resolve, reject) => {
+        refresh.requestNewAccessToken('oauth2', this.refreshToken, (err, accessToken, refreshToken) => {
+            this.setAccessToken(accessToken);
+            this.setRefreshToken(refreshToken);
+            this.save()
+                .then(() => {
+                    resolve(true)
+                })
+                .catch(() => {
+                    reject(false)
+                });
+        });
+    })
+};
+
+EbayAccount.methods.addPolicy = async function (type, policy) {
+    switch (type) {
         case "fulfillment":
             this.fulfillmentPolicies = this.fulfillmentPolicies.concat(policy);
             break;
@@ -117,12 +136,15 @@ EbayAccount.methods.addPolicy = async function(type, policy){
             this.returnPolicies = this.fulfillmentPolicies.concat(policy);
             break;
     }
-    this.save(()=>{return new Promise((resolve, reject)=>{resolve(true)})});
+    this.save(() => {
+        return new Promise((resolve, reject) => {
+            resolve(true)
+        })
+    });
 };
 
 EbayAccount.methods.request = async function (method, uri, params) {
     var token = this.accessToken;
-    var ebayAccount = this;
     var options = {};
     if (params) {
         options = params;
@@ -150,12 +172,10 @@ EbayAccount.methods.request = async function (method, uri, params) {
             }
 
             if (error.errors.message === 'Invalid access token') {
-                refresh.requestNewAccessToken('oauth2', ebayAccount.refreshToken, (err, accessToken, refreshToken) => {
-                    ebayAccount.setAccessToken(accessToken);
-                    ebayAccount.setRefreshToken(refreshToken);
-                    ebayAccount.save().then(() => {
-                        resolve({error: "Invalid access token. Attempting to refresh token and attempt new request."})
-                    }).catch();
+                this.refreshAccessToken().then((success) => {
+                    if (success) {
+                        this.request(method, uri, params)
+                    }
                 });
             }
             resolve(error);
@@ -318,14 +338,14 @@ EbayAccount.methods.getListingFees = async function () {
     return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/offer/get_listing_fees");
 };
 
-EbayAccount.methods.createLocation = async function(payload) {
+EbayAccount.methods.createLocation = async function (payload) {
     this.merchantLocationKey = payload.name;
-    this.save(async ()=>{
+    this.save(async () => {
         return await this.request("POST", "https://api.ebay.com/sell/inventory/v1/location/" + payload.name, payload);
     });
 };
 
-EbayAccount.methods.getLocation = async function() {
+EbayAccount.methods.getLocation = async function () {
     return await this.request("GET", "https://api.ebay.com/sell/inventory/v1/location");
 };
 
@@ -333,10 +353,10 @@ EbayAccount.methods.getLocation = async function() {
 
 
 EbayAccount.methods.getCategory = function (title) {
-        var uri = 'https://api.ebay.com/commerce/taxonomy/v1_beta/category_tree/' + this.defaultCategoryTreeId + '/get_category_suggestions?q=' + title;
-        this.request("GET", uri).then((results) => {
-            return results.categorySuggestions[0].category.categoryId;
-        }).catch()
+    var uri = 'https://api.ebay.com/commerce/taxonomy/v1_beta/category_tree/' + this.defaultCategoryTreeId + '/get_category_suggestions?q=' + title;
+    this.request("GET", uri).then((results) => {
+        return results.categorySuggestions[0].category.categoryId;
+    }).catch()
 };
 
 mongoose.model('ebayaccount', EbayAccount);
