@@ -149,7 +149,7 @@ OfferSchema.methods.toOfferJSON = function (merchantLocationKey) {
                 "returnPolicyId": this.returnPolicy,
                 "fulfillmentPolicyId": this.fulfillmentPolicy,
             },
-        "merchantLocationKey": merchantLocationKey,
+        "merchantLocationKey": `"${merchantLocationKey}"`,
         "pricingSummary":
             {
                 /* PricingSummary */
@@ -181,7 +181,7 @@ OfferSchema.methods.toInventoryItemJSON = function (merchantLocationKey) {
                 "pickupAtLocationAvailability" : [
                     { /* PickupAtLocationAvailability */
                         "availabilityType" : "OUT_OF_STOCK",
-                        "merchantLocationKey" : merchantLocationKey,
+                        "merchantLocationKey" : `"${merchantLocationKey}"`,
                         "quantity" : 0
                     }
                 ],
