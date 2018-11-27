@@ -321,6 +321,21 @@ router.post('/inventory/getLocation', auth.required, function (req, res, next) {
         }).catch(next);
 });
 
+router.post('/inventory/setLocation', auth.required, function (req, res, next) {
+    User.findById(req.payload.id)
+        .populate("ebayAccounts")
+        .then(async function (user) {
+            if (!user) {
+                return res.status(422).json({error: "no user logged in"})
+            }
+            var ebayAcc = user.getEbayAccounts()[0];
+            if (!ebayAcc) {
+                return res.status(422).json({errors: "no ebay account found"})
+            }
+            return res.json(await ebayAcc.setLocation(req.body.loc));
+        }).catch(next);
+});
+
 router.get('/taxonomy/getDefaultCategory', auth.required, function(req, res, next){
     User.findById(req.payload.id)
         .populate("ebayAccounts")

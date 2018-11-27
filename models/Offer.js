@@ -48,7 +48,8 @@ OfferSchema.methods.toAuthJSON = function () {
     return {
         sourcePrice: this.sourcePrice,
         price: this.price,
-        id: this.sourceID
+        id: this.sourceID,
+        offerID: this.offerID
     }
 };
 
@@ -167,7 +168,7 @@ OfferSchema.methods.toOfferJSON = function (merchantLocationKey) {
 };
 
 
-OfferSchema.methods.toInventoryItemJSON = function () {
+OfferSchema.methods.toInventoryItemJSON = function (merchantLocationKey) {
     var dimensionEnumValue = "";
     if (this.dimensionUnit === "inches"){
         dimensionEnumValue = "INCH";
@@ -177,6 +178,13 @@ OfferSchema.methods.toInventoryItemJSON = function () {
         "availability":
             {
                 /* Availability */
+                "pickupAtLocationAvailability" : [
+                    { /* PickupAtLocationAvailability */
+                        "availabilityType" : "OUT_OF_STOCK",
+                        "merchantLocationKey" : merchantLocationKey,
+                        "quantity" : 0
+                    }
+                ],
                 "shipToLocationAvailability":
                     {
                         /* ShipToLocationAvailability */

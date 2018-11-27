@@ -33,7 +33,9 @@ EbayAccount.methods.toAuthJSON = function () {
         returnPolicies: this.returnPolicies,
         activePayment: this.activePayment,
         activeFulfillment: this.activeFulfillment,
-        activeReturn: this.activeReturn
+        activeReturn: this.activeReturn,
+        defaultCategoryTreeId: this.defaultCategoryTreeId,
+        merchantLocationKey: this.merchantLocationKey
     }
 };
 
@@ -69,10 +71,17 @@ EbayAccount.methods.getMerchantLocationKey = async function(){
     return this.merchantLocationKey;
 };
 
+EbayAccount.methods.setLocation = function (location) {
+    this.merchantLocationKey = location;
+    this.save((res)=>{})
+};
+
 EbayAccount.methods.setDefaultCategory = async function(){
     return this.request('GET', "https://api.ebay.com/commerce/taxonomy/v1_beta/get_default_category_tree_id?marketplace_id=EBAY_US")
         .then((res) => {
-            this.defaultCategoryTreeId = res.categoryTreeID;
+            console.log(res);
+            this.defaultCategoryTreeId = res.categoryTreeId;
+            this.save(()=>{return true})
         })
 };
 

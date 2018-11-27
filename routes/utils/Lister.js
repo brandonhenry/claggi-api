@@ -25,14 +25,8 @@ class Lister {
         }
 
         this.active = true;
-        this.createInventoryItem().then(() => {
-            this.createOffer().then(() => {
-                this.publishOffers().then(() => {
+        this.list();
 
-                })
-            })
-        });
-        // this.publishOffers();
     }
 
     stop() {
@@ -47,15 +41,6 @@ class Lister {
         return this.lastUpdate;
     }
 
-    setPrice(listing) {
-        listing.price = listing.sourcePrice + (listing.sourcePrice * this.margin);
-        return listing.save(function () {
-            return new Promise((resolve, reject) => {
-                resolve(true);
-            })
-        })
-    }
-
     setAccount(account) {
         this.ebayAccount = account;
         return new Promise((resolve, reject) => {
@@ -63,106 +48,103 @@ class Lister {
         })
     }
 
-    createInventoryItem() {
-        if (!this.active) {return;}
-        return new Promise((resolve, reject) => {
-            var i = 0;
-            Offers.find({}).then(async (offer) => {
-                offer.forEach(async (item) => {
-                    ++i;
-                    if (!this.isDuplicate(item)) {
-                        await this.ebayAccount.createOrReplaceInventoryItem(item.itemSKU, await item.toInventoryItemJSON())
-                            .then(function () {
-                                item.inventoryItemMade = true;
-                                item.save(() => {});
-                            }).catch((err) => {console.log(err);});
+
+    list() {
+        Offers.find({}).then(async (offer) => {
+                for (let i = 0; i < offer.length; i++) {
+                    if (!this.active){
+                        break;
                     }
-                    if (i === offer.length){return resolve(true)}
-                });
-            }).catch((err) => {console.log(err)});
+                    await this.prepare(offer[i])
+                        .then(() => {
+                            offer[i].save()
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        });
+                }
+            }
+        )
+    }
+
+    async prepare(item) {
+        if (this.isDuplicate(item)) {
+            return;
+        }
+        return new Promise(async (resolve, reject) => {
+            await this.createInventoryItem(item)
+                .then(async () => {
+                    item.inventoryItemMade = true;
+                    await this.createOffer(item).catch((err) => {
+                        reject(console.log(err))
+                    });
+                }).then(async (offerID) => {
+                    console.log("OfferID: " + offerID);
+                    item.setOfferID(offerID);
+                    item.setCreated(true);
+                    resolve(offerID);
+                    // await publishOffer(offerID).catch((err) => {
+                    //     reject(console.log(err))
+                    // });
+                }).then(async (listingID) => {
+                    // item.setListingID(listingID);
+                    // item.setPublished(true);
+                    // item.save(() => {
+                    //     resolve(true)
+                    // });
+                })
         })
     }
 
-    createOffer() {
-        if (!this.active) {return;}
-        return new Promise((resolve, reject) => {
-            var i = 0;
-            Offers.find({}).then(async (offer) => {
-                offer.forEach(async (item) => {
-                    ++i;
-                    if (!this.isDuplicate(item) && item.canList()) {
-                        await this.ebayAccount.createOffer(await item.toOfferJSON(this.ebayAccount.getMerchantLocationKey()))
-                            .then(function (res) {
-                                if (res.errors || res.error) {
-                                    // resolve(console.log({errors: res.errors, error: res.error}))
-                                } else if (res.offerId) {
-                                    console.log("OfferID: " + res.offerId);
-                                    item.setOfferID(res.offerId);
-                                    item.setCreated(true);
-                                    item.save(() => {});
-                                } else {
-                                    resolve(console.log("error!"))
-                                }
-                            }).catch((err) => {resolve(console.log(err))});
+    createInventoryItem(item) {
+        return new Promise(async (resolve, reject) => {
+            await this.ebayAccount.createOrReplaceInventoryItem(item.itemSKU, await item.toInventoryItemJSON(this.ebayAccount.getMerchantLocationKey()))
+                .then(() => {
+                    resolve(true)
+                })
+        })
+
+    }
+
+    createOffer(item) {
+        return new Promise(async (resolve, reject) => {
+            if (item.canList()) {
+                await this.ebayAccount.createOffer(await item.toOfferJSON(this.ebayAccount.getMerchantLocationKey()))
+                    .then(function (res) {
+                        if (res.errors || res.error) {
+                            reject(({errors: res.errors + res.error}))
+                        } else if (res.offerId) {
+                            resolve(res.offerId)
+                        } else {
+                            throw new Error(res);
+                        }
+                    })
+            }
+        });
+    }
+
+    publishOffer(offerID) {
+        return new Promise(async (resolve, reject) => {
+            await this.ebayAccount.publishOffer(offerID)
+                .then(function (res) {
+                    if (res.errors || res.error) {
+                        reject(({errors: res.errors + res.error}))
+                    } else if (res.listingID) {
+                        resolve(res.listingID)
                     }
-                    if (i === offer.length){return resolve(true)}
+                }).catch((err) => {
+                    throw new Error(err)
                 });
-            }).catch((err) => {console.log(err)});
         })
     }
 
-    publishOffers() {
-        if (!this.active) {return;}
-        return new Promise((resolve, reject) => {
-            var i = 0;
-            Offers.find({}).then(async (offer) => {
-                offer.each(async (item) => {
-                    i++;
-                    if (!this.isDuplicate(item) && !item.isPublished() && item.offerID) {
-                        await this.ebayAccount.publishOffer(await item.getOfferID())
-                            .then(function (res) {
-                                if (res.errors || res.error) {
-                                    // resolve(console.log({errors: res.errors, error: res.error}))
-                                } else if (res.listingID) {
-                                    item.setListingID(res.listingID);
-                                    item.setPublished(true);
-                                    item.save(() => { });
-                                }
-                            }).catch((err) => { resolve(console.log(err)) });
-                    } else {
-                        reject(false);
-                    }
-                    if (i === offer.length){return resolve(true)}
-                });
-            }).catch((err)=>{resolve(console.log(err))});
-        })
-    }
-
-    queueCreateInventoryItem() {
+    queueLister() {
         var delay = 600000; // 10 minutes;
         this.lastUpdate = new Date().toLocaleTimeString();
         if (this.active) {
             setInterval(() => {
                 this.createInventoryItem()
             }, delay);
-        }
-    }
-
-    queueCreateOffers() {
-        var delay = 600000; // 10 minutes;
-        this.lastUpdate = new Date().toLocaleTimeString();
-        if (this.active) {
-            setInterval(() => {
-                this.createInventoryItem()
-            }, delay);
-        }
-    }
-
-    queuePublishOffers() {
-        var delay = 600000; // 10 minutes;
-        this.lastUpdate = new Date().toLocaleTimeString();
-        if (this.active) {
-            setInterval(this.publishOffers(), delay);
         }
     }
 
