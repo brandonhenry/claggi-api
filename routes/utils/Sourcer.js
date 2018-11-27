@@ -47,13 +47,6 @@ class Sourcer {
         return this.lastScan;
     }
 
-    getPrice(price) {
-        var calcPrice;
-        calcPrice = Number(price) + (Number(price) * this.margin);
-        calcPrice = calcPrice.toFixed(2);
-        return calcPrice;
-    }
-
     queue() {
         var delay = 600000; // 10 minutes
         if (this.active) {
@@ -70,6 +63,13 @@ class Sourcer {
      * @returns {Promise<void>}
      */
     async scrape() {
+        scrapeEbayProducts.then((ebayProducts) => {
+            findAmazonProducts(ebayProducts).catch();
+        }).then((amazonProducts) => {
+            createOffers(amazonProducts).catch();
+        }).then(() => {
+            resolve(true)
+        });
         return new Promise(async (resolve, reject) => {
             try {
                 let ebay = new EbayAPI();
