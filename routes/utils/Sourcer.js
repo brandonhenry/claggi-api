@@ -28,11 +28,9 @@ class Sourcer {
         })
     }
 
-    run() {
+    async run() {
         this.active = true;
-        this.scrape().then(() => {
-            this.queue();
-        });
+        await this.scrape();
     }
 
     stop() {
@@ -63,29 +61,55 @@ class Sourcer {
      * @returns {Promise<void>}
      */
     async scrape() {
-        scrapeEbayProducts.then((ebayProducts) => {
-            findAmazonProducts(ebayProducts).catch();
+        if (!this.active){return;}
+        this.scrapeEbayProducts.then((ebayProducts) => {
+            this.findAmazonProducts(ebayProducts).catch();
         }).then((amazonProducts) => {
-            createOffers(amazonProducts).catch();
+            this.createOffers(amazonProducts).catch();
         }).then(() => {
-            resolve(true)
+            this.queue();
         });
-        return new Promise(async (resolve, reject) => {
-            try {
-                let ebay = new EbayAPI();
-                let pages = 1;
-                for (let pageNumber = 1; pageNumber <= pages; ++pageNumber) {
-                    await this.findEbayProducts(ebay, pageNumber);
-                    if (pageNumber === pages) {
-                        // all done
-                        resolve(true);
-                    }
+    }
+
+    scrapeEbayProducts() {
+        var products = [];
+        return new Promise(async (resolve, rejeect) => {
+            let ebay = new EbayAPI();
+            let pages = 1;
+            for (let pageNumber = 1; pageNumber <= pages; ++pageNumber) {
+                await this.findEbayProducts(ebay, pageNumber).then((results) => {
+                    products.concat(results);
+                }).catch();
+                if (pageNumber === pages) {
+                    // all done
+                    resolve(products);
                 }
-            } catch (err) {
-                console.log(err);
-                throw new Error('Failed to send response' + err);
             }
         })
+    }
+
+    findAmazonProducts(products) {
+        var azProducts = [];
+        for (var i = 0; i < products.length; i++) {
+            if (products[i] === undefined) {
+                return
+            }
+            this.findAmazonProduct(products[i]).then((results) => {
+                azProducts.concat(results);
+            }).catch((err) => {
+                console.log(err)
+            })
+        }
+    }
+
+    async createOffers(products) {
+        for (var i = 0; i < products.length; i++){
+            Offers.create(await this.amazonProductParser.parse(products[i]), (err) => {
+                if (err) {
+                    console.log(err)
+                }
+            })
+        }
     }
 
     /**
@@ -94,49 +118,33 @@ class Sourcer {
      * @returns {Promise<any>}
      */
     findAmazonProduct(title) {
-        var i = this;
         let parseString = require('xml2js').parseString;
-        if (title === undefined) {
-            return new Promise(function (resolve, reject) {
-                resolve(undefined);
-            })
-        } else {
-            return new Promise((resolve, reject) => {
-                let opHelper = new OperationHelper({
-                    awsId: azAwsId,
-                    awsSecret: azAccessKey,
-                    assocId: azAssociateTag,
-                });
-                opHelper.execute('ItemSearch', {
-                    'SearchIndex': 'All',
-                    'Keywords': title,
-                    'MechantId': 'All',
-                    'Condition': 'New',
-                    'ResponseGroup': 'Medium',
-                }).then((response) => {
-                    parseString(response.responseBody, // noinspection JSAnnotator
-                        async (err, res) => {
-                            try {
-                                if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]) {
-                                    Offers.create(await this.amazonProductParser.parse(res), (err) => {
-                                        if (err) {
-                                            console.log(err)
-                                        }
-                                        resolve(true)
-                                    });
-                                } else {
-                                    resolve(undefined);
-                                }
-                            } catch (err) {
-                                resolve(undefined);
-                            }
-                        });
-                }).catch((err) => {
-                    console.error("Something went wrong: ", err);
-                });
+        return new Promise((resolve, reject) => {
+            let opHelper = new OperationHelper({
+                awsId: azAwsId,
+                awsSecret: azAccessKey,
+                assocId: azAssociateTag,
+            });
+            opHelper.execute('ItemSearch', {
+                'SearchIndex': 'All',
+                'Keywords': title,
+                'MechantId': 'All',
+                'Condition': 'New',
+                'ResponseGroup': 'Medium',
+            }).then((response) => {
+                parseString(response.responseBody, // noinspection JSAnnotator
+                    async (err, res) => {
+                        if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]) {
+                            resolve(res);
+                        } else {
+                            reject(err);
+                        }
+                    });
+            }).catch((err) => {
+                console.error("Something went wrong: ", err);
             });
 
-        }
+        })
     }
 
     /**
@@ -146,20 +154,19 @@ class Sourcer {
      * @returns {Promise<*>}
      */
     async findEbayProducts(ebay, pageNumber) {
-        var source = this;
+        var products = [];
         return new Promise(function (resolve, reject) {
-            let itemCounter = 0;
             let ebayItems = {};
 
             request.get(ebay.endpoint[pageNumber - 1], async function (err, res2, body) {
                 if (err) {
-                    throw new Error('Error requesting eBay items: ' + err)
+                    reject('Error requesting eBay items: ' + err)
                 } else {
                     try {
                         let jsdata = JSON.parse(body);
                         ebayItems = jsdata.findCompletedItemsResponse[0].searchResult[0].item || [];
                     } catch (err) {
-                        throw new Error('Error trying to parse ebay response data: ' + err)
+                        reject('Error trying to parse ebay response data: ' + err)
                     }
 
                     for (let i = 0; i < ebayItems.length; ++i) {
@@ -167,14 +174,12 @@ class Sourcer {
                         let ebayTitle = item.title;
                         let ebayUrl = item.viewItemURL;
 
-                        itemCounter += 1;
-
                         if (null != ebayTitle && null != ebayUrl) {
-                            await source.findAmazonProduct(ebayTitle);
+                            products.push(ebayTitle);
                         }
 
                         if (i === ebayItems.length - 1) {
-                            resolve(true);
+                            resolve(products);
                         }
                     }
                 }

@@ -336,6 +336,8 @@ router.post('/inventory/setLocation', auth.required, function (req, res, next) {
         }).catch(next);
 });
 
+//-------------------------------------------TAXONOMY-------------------------------------------//
+
 router.get('/taxonomy/getDefaultCategory', auth.required, function(req, res, next){
     User.findById(req.payload.id)
         .populate("ebayAccounts")
