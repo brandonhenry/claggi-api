@@ -67,10 +67,6 @@ EbayAccount.methods.setFulfillmentPolicy = async function (policyId) {
     this.activeFulfillment = policyId;
 };
 
-EbayAccount.methods.getMerchantLocationKey = async function () {
-    return this.merchantLocationKey;
-};
-
 EbayAccount.methods.setLocation = function (location) {
     this.merchantLocationKey = location;
     this.save((res) => {
@@ -150,6 +146,7 @@ EbayAccount.methods.request = async function (method, uri, params) {
         options = params;
     }
     return new Promise(function (resolve, reject) {
+        var i = this;
         request({
             "method": method,
             "uri": uri,
@@ -172,7 +169,7 @@ EbayAccount.methods.request = async function (method, uri, params) {
             }
 
             if (error.errors.message === 'Invalid access token') {
-                this.refreshAccessToken().then((success) => {
+                i.refreshAccessToken().then((success) => {
                     if (success) {
                         this.request(method, uri, params)
                     }

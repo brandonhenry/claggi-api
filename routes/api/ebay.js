@@ -3,6 +3,7 @@ var mongoose = require('mongoose');
 var User = mongoose.model('user');
 var auth = require('../auth');
 var EbayAccount = mongoose.model('ebayaccount');
+var AccountValidator = require('../utils/AccountValidator');
 var states = {};
 
 router.post('/updateUser', auth.required, function (req, res, next) {
@@ -52,11 +53,13 @@ router.post('/', auth.required, function (req, res, next) {
 router.get('/', auth.required, function (req, res, next) {
     User.findById(req.payload.id)
         .populate("ebayAccounts")
-        .then(function (user) {
+        .then(async function (user) {
             if (!user) {
                 return res.status(422).json({error: "no user logged in"})
             }
 
+            var accountValidator = new AccountValidator(user);
+            await accountValidator.validate();
             return res.json(user.getEbayAccounts()[0].toAuthJSON())
         }).catch(next);
 

@@ -1,6 +1,6 @@
 var request = require('request');
 var EbayAPI = require('./Ebay');
-var AmazonProductParser = require('AmazonProductParser');
+var AmazonProductParser = require('./AmazonProductParser');
 var mongoose = require('mongoose');
 var Offers = mongoose.model('offers');
 var sku = require('./SkuGenerator');

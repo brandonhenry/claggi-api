@@ -3,19 +3,22 @@
 // All information needed for item creation:
 // merchantLocationKey, policies, mainCategoryId
 
+var mongoose = require('mongoose');
 var EbayAccount = mongoose.model('ebayaccount');
 
-class AccountValidator {
+module.exports = class AccountValidator {
 
-    constructor(user, ebayAccount) {
+    constructor(user) {
         this.user = user;
-        this.ebayAccount = ebayAccount;
+        this.ebayAccount = null;
     }
 
     validate() {
         if (!this.user) {
             return new Error("No user account found!");
         }
+
+        this.ebayAccount = this.user.getEbayAccounts()[0];
 
         if (!this.ebayAccount) {
             this.createEbayAccount();
@@ -28,26 +31,32 @@ class AccountValidator {
 
     }
 
-    validateEbayAccount() {
+    refreshAccessToken(){
+
+    }
+
+    async validateEbayAccount() {
         if (!this.ebayAccount.merchantLocationKey) {
             this.createOrSetMerchantLocationKey();
         }
 
         if (this.isAnyPoliciesMissing()) {
-            this.getPolicies();
+            await this.getPolicies();
         }
 
         if (!this.ebayAccount.defaultCategoryTreeId) {
-            this.getDefaultCategoryTreeId();
+            await this.ebayAccount.setDefaultCategory()
         }
     }
 
     createOrSetMerchantLocationKey(){
-
-    }
-
-    getDefaultCategoryTreeId(){
-
+        this.ebayAccount.getLocation().then(async (res)=>{
+            if (res){
+                this.ebayAccount.setLocation(res.location);
+            } else {
+                await this.ebayAccount.createLocation("mainWarehouse");
+            }
+        })
     }
 
     isAnyPoliciesMissing() {
@@ -80,7 +89,7 @@ class AccountValidator {
                 }]);
             });
         });
-
-        setActivePolicies();
     }
+
+
 }
