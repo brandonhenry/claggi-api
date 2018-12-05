@@ -32,6 +32,9 @@ module.exports = class AccountValidator {
 
     static refreshAccessToken(refreshToken) {
         return new Promise((resolve, reject) => {
+            if (!refreshToken){
+               return reject("No refresh token set");
+            }
             refresh.requestNewAccessToken('oauth2', refreshToken, (err, accessToken, refreshToken) => {
                 if (err) {
                     reject({error: err})
@@ -47,7 +50,7 @@ module.exports = class AccountValidator {
             this.createOrSetMerchantLocationKey();
         }
 
-        if (this.isAnyPoliciesMissing()) {
+        if (this.isAnyPoliciesMissing() && this.ebayAccount.accessToken) {
             await this.getPolicies();
         }
 
@@ -72,7 +75,7 @@ module.exports = class AccountValidator {
 
     async getPolicies() {
         await this.ebayAccount.getFulfillmentPolicies().then(async (res) => {
-            console.log(res);
+            if (!res.fulfillmentPolicies){return "no policies"}
             res.fulfillmentPolicies.forEach(async (policy) => {
                 await this.ebayAccount.addPolicy("fulfillment", [{
                     name: policy.name,
@@ -81,6 +84,7 @@ module.exports = class AccountValidator {
             });
         });
         await this.ebayAccount.getReturnPolicies().then(async (res) => {
+            if (!res.returnPolicies){return "no policies"}
             res.returnPolicies.forEach(async (policy) => {
                 await this.ebayAccount.addPolicy("return", [{
                     name: policy.name,
@@ -89,6 +93,7 @@ module.exports = class AccountValidator {
             });
         });
         await this.ebayAccount.getPaymentPolicies().then(async (res) => {
+            if (!res.paymentPolicies){return "no policies"}
             res.paymentPolicies.forEach(async (policy) => {
                 await this.ebayAccount.addPolicy("payment", [{
                     name: policy.name,
@@ -97,6 +102,4 @@ module.exports = class AccountValidator {
             });
         });
     }
-
-
-}
+};
