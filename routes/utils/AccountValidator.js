@@ -3,8 +3,7 @@
 // All information needed for item creation:
 // merchantLocationKey, policies, mainCategoryId
 
-var mongoose = require('mongoose');
-var EbayAccount = mongoose.model('ebayaccount');
+var refresh = require('passport-oauth2-refresh');
 
 module.exports = class AccountValidator {
 
@@ -27,12 +26,20 @@ module.exports = class AccountValidator {
         this.validateEbayAccount();
     }
 
-    createEbayAccount(){
+    createEbayAccount() {
 
     }
 
-    refreshAccessToken(){
-
+    static refreshAccessToken(refreshToken) {
+        return new Promise((resolve, reject) => {
+            refresh.requestNewAccessToken('oauth2', refreshToken, (err, accessToken, refreshToken) => {
+                if (err) {
+                    reject({error: err})
+                } else {
+                    resolve({accessToken: accessToken, refreshToken: refreshToken})
+                }
+            });
+        })
     }
 
     async validateEbayAccount() {
@@ -49,9 +56,9 @@ module.exports = class AccountValidator {
         }
     }
 
-    createOrSetMerchantLocationKey(){
-        this.ebayAccount.getLocation().then(async (res)=>{
-            if (res){
+    createOrSetMerchantLocationKey() {
+        this.ebayAccount.getLocation().then(async (res) => {
+            if (res) {
                 this.ebayAccount.setLocation(res.location);
             } else {
                 await this.ebayAccount.createLocation("mainWarehouse");
