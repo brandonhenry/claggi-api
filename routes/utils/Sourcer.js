@@ -81,18 +81,18 @@ class Sourcer {
     }
 
     scrapeEbayProducts() {
-        var products = [];
         return new Promise(async (resolve, reject) => {
+            var products = [];
             let ebay = new EbayAPI();
             let pages = 1;
             for (let pageNumber = 1; pageNumber <= pages; ++pageNumber) {
                 await this.findEbayProducts(ebay, pageNumber).then((results) => {
-                    products.concat(results);
-                }).catch();
-                if (pageNumber === pages) {
-                    // all done
-                    resolve(products);
-                }
+                    products = products.concat(results);
+                    if (pageNumber === pages) {
+                        // all done
+                        resolve(products);
+                    }
+                }).catch((err)=>{console.log(err)});
             }
         })
     }
@@ -105,7 +105,7 @@ class Sourcer {
                     return
                 }
                 this.findAmazonProduct(products[i]).then((results) => {
-                    azProducts.concat(results);
+                    azProducts = azProducts.concat(results);
                 }).catch((err) => {
                     console.log(err)
                 });
@@ -153,10 +153,10 @@ class Sourcer {
             }).then((response) => {
                 parseString(response.responseBody, // noinspection JSAnnotator
                     async (err, res) => {
-                        if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]) {
-                            resolve(res);
+                        if (res.ItemSearchResponse.Items[0].Request[0].Errors[0].Error[0].Message[0]){
+                            reject(res.ItemSearchResponse.Items[0].Request[0].Errors[0].Error[0].Message[0]);
                         } else {
-                            reject(err);
+                            resolve(res);
                         }
                     });
             }).catch((err) => {
@@ -190,7 +190,7 @@ class Sourcer {
 
                     for (let i = 0; i < ebayItems.length; ++i) {
                         let item = ebayItems[i];
-                        let ebayTitle = item.title;
+                        let ebayTitle = item.title[0];
                         let ebayUrl = item.viewItemURL;
 
                         if (null != ebayTitle && null != ebayUrl) {
