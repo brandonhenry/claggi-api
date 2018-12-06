@@ -81,8 +81,6 @@ class Sourcer {
                 });
             }).then(() => {
                 this.queue();
-            }).catch((err) => {
-                console.log(err)
             });
     }
 
@@ -106,9 +104,9 @@ class Sourcer {
     }
 
     findAmazonProducts(products) {
-        var azProducts = [];
         var count = 0;
         return new Promise(async (resolve, reject) => {
+            var azProducts = [];
             for (var i = 0; i < products.length; i++) {
                 if (products[i] === undefined) {
                     return
@@ -128,16 +126,14 @@ class Sourcer {
     }
 
     async createOffers(products) {
+        var count = 0;
         return new Promise(async (resolve, reject) => {
             for (var i = 0; i < products.length; i++) {
+                count++;
                 Offers.create(await this.amazonProductParser.parse(products[i]), (err) => {
-                    if (err) {
-                        console.log(err)
-                    }
+                    if (err) {console.log(err)}
+                    if (count === products.length) {resolve(true);}
                 });
-                if (i === products.length) {
-                    resolve(true);
-                }
             }
         })
     }
