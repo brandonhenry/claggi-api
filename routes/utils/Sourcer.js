@@ -107,19 +107,22 @@ class Sourcer {
 
     findAmazonProducts(products) {
         var azProducts = [];
-        return new Promise((resolve, reject) => {
+        var count = 0;
+        return new Promise(async (resolve, reject) => {
             for (var i = 0; i < products.length; i++) {
                 if (products[i] === undefined) {
                     return
                 }
-                this.findAmazonProduct(products[i]).then((results) => {
-                    azProducts = azProducts.concat(results);
-                }).catch((err) => {
+                count++;
+                await this.findAmazonProduct(products[i])
+                    .then((results) => {
+                        azProducts = azProducts.concat(results);
+                        if (count === products.length) {
+                            resolve(azProducts);
+                        }
+                    }).catch((err) => {
                     console.log(err)
                 });
-                if (i === products.length) {
-                    resolve(azProducts);
-                }
             }
         })
     }
@@ -162,7 +165,7 @@ class Sourcer {
                             console.log(res.ItemSearchErrorResponse.Error[0].Message[0]);
                             reject(false);
                         } else if (res.ItemSearchResponse.hasOwnProperty("Items")) {
-                            resolve(res)
+                            resolve([res])
                         } else {
                             reject(false)
                         }
