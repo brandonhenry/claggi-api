@@ -19,6 +19,12 @@ class Sourcer {
         this.lastScan = 'No scan yet..';
         this.amazonProductParser = null;
         this.margin = 0.4;
+        this.opHelper = new OperationHelper({
+            awsId: azAwsId,
+            awsSecret: azAccessKey,
+            assocId: azAssociateTag,
+            maxRequestsPerSecond: 1
+        });
     }
 
     setEbayAccount(ebayAccount) {
@@ -92,7 +98,9 @@ class Sourcer {
                         // all done
                         resolve(products);
                     }
-                }).catch((err)=>{console.log(err)});
+                }).catch((err) => {
+                    console.log(err)
+                });
             }
         })
     }
@@ -139,12 +147,7 @@ class Sourcer {
     findAmazonProduct(title) {
         let parseString = require('xml2js').parseString;
         return new Promise((resolve, reject) => {
-            let opHelper = new OperationHelper({
-                awsId: azAwsId,
-                awsSecret: azAccessKey,
-                assocId: azAssociateTag,
-            });
-            opHelper.execute('ItemSearch', {
+            this.opHelper.execute('ItemSearch', {
                 'SearchIndex': 'All',
                 'Keywords': title,
                 'MechantId': 'All',
@@ -153,17 +156,21 @@ class Sourcer {
             }).then((response) => {
                 parseString(response.responseBody, // noinspection JSAnnotator
                     async (err, res) => {
-                        if (res.ItemSearchResponse.Items[0].Request[0].Errors[0].Error[0].Message[0]){
-                            reject(res.ItemSearchResponse.Items[0].Request[0].Errors[0].Error[0].Message[0]);
+                        if (err || !res) {
+                            reject(false);
+                        } else if (res.hasOwnProperty("ItemSearchErrorResponse")) {
+                            console.log(res.ItemSearchErrorResponse.Error[0].Message[0]);
+                            reject(false);
+                        } else if (res.ItemSearchResponse.hasOwnProperty("Items")) {
+                            resolve(res)
                         } else {
-                            resolve(res);
+                            reject(false)
                         }
                     });
             }).catch((err) => {
                 console.error("Something went wrong: ", err);
             });
-
-        })
+        });
     }
 
     /**
