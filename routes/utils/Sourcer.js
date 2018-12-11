@@ -3,7 +3,6 @@ var EbayAPI = require('./Ebay');
 var AmazonProductParser = require('./AmazonProductParser');
 var mongoose = require('mongoose');
 var Offers = mongoose.model('offers');
-var sku = require('./SkuGenerator');
 
 // Amazon Constants
 let OperationHelper = require('apac').OperationHelper;
@@ -18,7 +17,6 @@ class Sourcer {
         this.active = false;
         this.lastScan = 'No scan yet..';
         this.amazonProductParser = null;
-        this.margin = 0.4;
         this.opHelper = new OperationHelper({
             awsId: azAwsId,
             awsSecret: azAccessKey,
@@ -72,11 +70,11 @@ class Sourcer {
         }
         await this.scrapeEbayProducts()
             .then(async (ebayProducts) => {
-                await this.findAmazonProducts(ebayProducts).catch((err) => {
-                    console.log(err)
+                return await this.findAmazonProducts(ebayProducts).catch((err) => {
+
                 });
             }).then(async (amazonProducts) => {
-                await this.createOffers(amazonProducts).catch((err) => {
+                return await this.createOffers(amazonProducts).catch((err) => {
                     console.log(err)
                 });
             }).then(() => {
@@ -114,10 +112,8 @@ class Sourcer {
                 count++;
                 await this.findAmazonProduct(products[i])
                     .then((results) => {
-                        azProducts = azProducts.concat(results);
-                        if (count === products.length) {
-                            resolve(azProducts);
-                        }
+                        if (results){azProducts = azProducts.concat(results);}
+                        if (count === products.length - 1) {resolve(azProducts);}
                     }).catch((err) => {
                     console.log(err)
                 });
@@ -161,7 +157,11 @@ class Sourcer {
                             console.log(res.ItemSearchErrorResponse.Error[0].Message[0]);
                             reject(false);
                         } else if (res.ItemSearchResponse.hasOwnProperty("Items")) {
-                            resolve([res])
+                            if (res.ItemSearchResponse.Items[0].Request[0].hasOwnProperty("Errors")){
+                                reject(false);
+                            } else {
+                                resolve([res])
+                            }
                         } else {
                             reject(false)
                         }
