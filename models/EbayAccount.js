@@ -104,6 +104,7 @@ EbayAccount.methods.getFulfillmentPolicy = function () {
     return this.activeFulfillment;
 };
 
+    return new Promise((resolve, reject) => {
 EbayAccount.methods.addPolicy = async function (type, policy) {
     switch (type) {
         case "fulfillment":
