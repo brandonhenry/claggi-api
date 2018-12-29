@@ -3,7 +3,8 @@
 // All information needed for item creation:
 // merchantLocationKey, policies, mainCategoryId
 
-var refresh = require('passport-oauth2-refresh');
+var mongoose = require('mongoose');
+var EbayAccount = mongoose.model('ebayaccount');
 
 module.exports = class AccountValidator {
 
@@ -30,20 +31,8 @@ module.exports = class AccountValidator {
 
     }
 
-    static refreshAccessToken(ebayAccount){
-        return new Promise((resolve, reject) => {
-            refresh.requestNewAccessToken('oauth2', ebayAccount.refreshToken, (err, accessToken, refreshToken) => {
-                ebayAccount.setAccessToken(accessToken);
-                ebayAccount.setRefreshToken(refreshToken);
-                ebayAccount.save()
-                    .then(() => {
-                        resolve(true)
-                    })
-                    .catch(() => {
-                        reject(false)
-                    });
-            });
-        })
+    refreshAccessToken(){
+
     }
 
     async validateEbayAccount() {
