@@ -3,7 +3,6 @@ var EbayAPI = require('./Ebay');
 var AmazonProductParser = require('./AmazonProductParser');
 var mongoose = require('mongoose');
 var Offers = mongoose.model('offers');
-var sku = require('./SkuGenerator');
 
 // Amazon Constants
 let OperationHelper = require('apac').OperationHelper;
@@ -18,7 +17,12 @@ class Sourcer {
         this.active = false;
         this.lastScan = 'No scan yet..';
         this.amazonProductParser = null;
-        this.margin = 0.4;
+        this.opHelper = new OperationHelper({
+            awsId: azAwsId,
+            awsSecret: azAccessKey,
+            assocId: azAssociateTag,
+            maxRequestsPerSecond: 1
+        });
     }
 
     setEbayAccount(ebayAccount) {
@@ -61,55 +65,73 @@ class Sourcer {
      * @returns {Promise<void>}
      */
     async scrape() {
-        if (!this.active){return;}
-        this.scrapeEbayProducts.then((ebayProducts) => {
-            this.findAmazonProducts(ebayProducts).catch();
-        }).then((amazonProducts) => {
-            this.createOffers(amazonProducts).catch();
-        }).then(() => {
-            this.queue();
-        });
+        if (!this.active) {
+            return;
+        }
+        await this.scrapeEbayProducts()
+            .then(async (ebayProducts) => {
+                return await this.findAmazonProducts(ebayProducts).catch((err) => {
+
+                });
+            }).then(async (amazonProducts) => {
+                return await this.createOffers(amazonProducts).catch((err) => {
+                    console.log(err)
+                });
+            }).then(() => {
+                this.queue();
+            });
     }
 
     scrapeEbayProducts() {
-        var products = [];
-        return new Promise(async (resolve, rejeect) => {
+        return new Promise(async (resolve, reject) => {
+            var products = [];
             let ebay = new EbayAPI();
             let pages = 1;
             for (let pageNumber = 1; pageNumber <= pages; ++pageNumber) {
                 await this.findEbayProducts(ebay, pageNumber).then((results) => {
-                    products.concat(results);
-                }).catch();
-                if (pageNumber === pages) {
-                    // all done
-                    resolve(products);
-                }
+                    products = products.concat(results);
+                    if (pageNumber === pages) {
+                        // all done
+                        resolve(products);
+                    }
+                }).catch((err) => {
+                    console.log(err)
+                });
             }
         })
     }
 
     findAmazonProducts(products) {
-        var azProducts = [];
-        for (var i = 0; i < products.length; i++) {
-            if (products[i] === undefined) {
-                return
+        var count = 0;
+        return new Promise(async (resolve, reject) => {
+            var azProducts = [];
+            for (var i = 0; i < products.length; i++) {
+                if (products[i] === undefined) {
+                    return
+                }
+                count++;
+                await this.findAmazonProduct(products[i])
+                    .then((results) => {
+                        if (results){azProducts = azProducts.concat(results);}
+                        if (count === products.length - 1) {resolve(azProducts);}
+                    }).catch((err) => {
+                    console.log(err)
+                });
             }
-            this.findAmazonProduct(products[i]).then((results) => {
-                azProducts.concat(results);
-            }).catch((err) => {
-                console.log(err)
-            })
-        }
+        })
     }
 
     async createOffers(products) {
-        for (var i = 0; i < products.length; i++){
-            Offers.create(await this.amazonProductParser.parse(products[i]), (err) => {
-                if (err) {
-                    console.log(err)
-                }
-            })
-        }
+        var count = 0;
+        return new Promise(async (resolve, reject) => {
+            for (var i = 0; i < products.length; i++) {
+                count++;
+                Offers.create(await this.amazonProductParser.parse(products[i]), (err) => {
+                    if (err) {console.log(err)}
+                    if (count === products.length) {resolve(true);}
+                });
+            }
+        })
     }
 
     /**
@@ -120,12 +142,7 @@ class Sourcer {
     findAmazonProduct(title) {
         let parseString = require('xml2js').parseString;
         return new Promise((resolve, reject) => {
-            let opHelper = new OperationHelper({
-                awsId: azAwsId,
-                awsSecret: azAccessKey,
-                assocId: azAssociateTag,
-            });
-            opHelper.execute('ItemSearch', {
+            this.opHelper.execute('ItemSearch', {
                 'SearchIndex': 'All',
                 'Keywords': title,
                 'MechantId': 'All',
@@ -134,17 +151,25 @@ class Sourcer {
             }).then((response) => {
                 parseString(response.responseBody, // noinspection JSAnnotator
                     async (err, res) => {
-                        if (res.ItemSearchResponse.Items[0].Item[0].EditorialReviews[0].EditorialReview[0].Content[0]) {
-                            resolve(res);
+                        if (err || !res) {
+                            reject(false);
+                        } else if (res.hasOwnProperty("ItemSearchErrorResponse")) {
+                            console.log(res.ItemSearchErrorResponse.Error[0].Message[0]);
+                            reject(false);
+                        } else if (res.ItemSearchResponse.hasOwnProperty("Items")) {
+                            if (res.ItemSearchResponse.Items[0].Request[0].hasOwnProperty("Errors")){
+                                reject(false);
+                            } else {
+                                resolve([res])
+                            }
                         } else {
-                            reject(err);
+                            reject(false)
                         }
                     });
             }).catch((err) => {
                 console.error("Something went wrong: ", err);
             });
-
-        })
+        });
     }
 
     /**
@@ -171,7 +196,7 @@ class Sourcer {
 
                     for (let i = 0; i < ebayItems.length; ++i) {
                         let item = ebayItems[i];
-                        let ebayTitle = item.title;
+                        let ebayTitle = item.title[0];
                         let ebayUrl = item.viewItemURL;
 
                         if (null != ebayTitle && null != ebayUrl) {

@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var request = require('request-promise');
-var refresh = require('passport-oauth2-refresh');
 var Lister = require('../routes/utils/Lister');
+var AccountValidator = require('../routes/utils/AccountValidator');
 
 var EbayAccount = new mongoose.Schema({
     accessToken: [{type: String, required: [true, 'must have accesstoken']}],
@@ -104,22 +104,6 @@ EbayAccount.methods.getFulfillmentPolicy = function () {
     return this.activeFulfillment;
 };
 
-EbayAccount.methods.refreshAccessToken = function () {
-    return new Promise((resolve, reject) => {
-        refresh.requestNewAccessToken('oauth2', this.refreshToken, (err, accessToken, refreshToken) => {
-            this.setAccessToken(accessToken);
-            this.setRefreshToken(refreshToken);
-            this.save()
-                .then(() => {
-                    resolve(true)
-                })
-                .catch(() => {
-                    reject(false)
-                });
-        });
-    })
-};
-
 EbayAccount.methods.addPolicy = async function (type, policy) {
     switch (type) {
         case "fulfillment":
@@ -169,11 +153,13 @@ EbayAccount.methods.request = async function (method, uri, params) {
             }
 
             if (error.errors.message === 'Invalid access token') {
-                i.refreshAccessToken().then((success) => {
+                AccountValidator.refreshAccessToken(this.refreshToken).then((success) => {
                     if (success) {
-                        this.request(method, uri, params)
+                        this.accessToken = success.accessToken;
+                        this.refreshToken = success.refreshToken;
+                        this.save(function(){this.request(method, uri, params)});
                     }
-                });
+                }).catch((err)=>{console.log(err)});
             }
             resolve(error);
         })
