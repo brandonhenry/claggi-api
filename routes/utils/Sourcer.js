@@ -107,13 +107,14 @@ class Sourcer {
             var azProducts = [];
             for (var i = 0; i < products.length; i++) {
                 if (products[i] === undefined) {
+                    count++;
                     return
                 }
                 count++;
                 await this.findAmazonProduct(products[i])
                     .then((results) => {
                         if (results){azProducts = azProducts.concat(results);}
-                        if (count === products.length - 1) {resolve(azProducts);}
+                        if (count === products.length) {resolve(azProducts);}
                     }).catch((err) => {
                     console.log(err)
                 });
@@ -158,7 +159,7 @@ class Sourcer {
                             reject(false);
                         } else if (res.ItemSearchResponse.hasOwnProperty("Items")) {
                             if (res.ItemSearchResponse.Items[0].Request[0].hasOwnProperty("Errors")){
-                                reject(false);
+                                reject(res.ItemSearchResponse.Items[0].Request[0].Errors[0].Error[0].Message[0]);
                             } else {
                                 resolve([res])
                             }

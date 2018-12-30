@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Offers = mongoose.model('offers');
 var sku = require('shortid');
+var AccountValidator = require('../utils/AccountValidator');
 
 class Lister {
 
@@ -52,7 +53,7 @@ class Lister {
     list() {
         Offers.find({}).then(async (offer) => {
                 for (let i = 0; i < offer.length; i++) {
-                    if (!this.active){
+                    if (!this.active) {
                         break;
                     }
                     await this.prepare(offer[i])
@@ -110,11 +111,25 @@ class Lister {
         return new Promise(async (resolve, reject) => {
             if (item.canList()) {
                 await this.ebayAccount.createOffer(await item.toOfferJSON(this.ebayAccount.getMerchantLocationKey()))
-                    .then(function (res) {
+                    .then((res) => {
                         if (res.errors || res.error) {
                             reject(({errors: res.errors + res.error}))
                         } else if (res.offerId) {
                             resolve(res.offerId)
+                        } else if (res === false) {
+                            AccountValidator.refreshAccessToken(this.ebayAccount.ebayRefreshToken).then((success) => {
+                                if (success) {
+                                    this.ebayAccount.accessToken = success.accessToken;
+                                    this.ebayAccount.save(function () {
+                                        createOffer(item).catch((err) => {
+                                            console.log(err);
+                                        })
+                                    }).catch();
+                                }
+                            }).catch((err) => {
+                                console.log(err);
+                                return res.json({error: err})
+                            });
                         } else {
                             throw new Error(res);
                         }

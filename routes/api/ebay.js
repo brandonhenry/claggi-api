@@ -6,6 +6,21 @@ var EbayAccount = mongoose.model('ebayaccount');
 var AccountValidator = require('../utils/AccountValidator');
 var states = {};
 
+function refresh(user, ebayAcc, res, next) {
+    AccountValidator.refreshAccessToken(user.ebayRefreshToken).then((success) => {
+        if (success) {
+            ebayAcc.accessToken = success.accessToken;
+            ebayAcc.refreshToken = user.ebayRefreshToken;
+            ebayAcc.save(function () {
+                return res.json({reRequestSuccess: info, message: "refresh token reset"})
+            }).catch(next);
+        }
+    }).catch((err) => {
+        console.log(err);
+        return res.json({error: err})
+    });
+}
+
 router.post('/updateUser', auth.required, function (req, res, next) {
     EbayAccount.findById(states.ebayID).then(function (ebayAcc) {
         console.log(req.body);
@@ -91,7 +106,13 @@ router.get('/fulfillment/orders', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.getOrders());
+            await ebayAcc.getOrders().then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            });
         }).catch(next);
 });
 
@@ -108,7 +129,13 @@ router.get('/account/privileges', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.getPrivileges());
+            ebayAcc.getPrivileges().then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            })
         }).catch(next);
 });
 
@@ -184,7 +211,14 @@ router.get('/analytics/sellerinfo', function (req, res, next) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
-        return res.json(await ebayAcc.getSellerInfo());
+
+        ebayAcc.getSellerInfo().then((success) => {
+            if (success) {
+                return res.json(success);
+            } else {
+                refresh(user, ebayAcc, res, next);
+            }
+        });
     }).catch(next)
 });
 
@@ -193,7 +227,13 @@ router.get('/analytics/trafficreport', function (req, res, next) {
         if (!ebayAcc) {
             return res.status(422).json({errors: "no ebay account found"})
         }
-        return res.json(await ebayAcc.getTrafficReport({dimension: 'DAY'}));
+        ebayAcc.getTrafficReport({dimension: 'DAY'}).then((success) => {
+            if (success) {
+                return res.json(success);
+            } else {
+                refresh(user, ebayAcc, res, next);
+            }
+        })
     }).catch(next)
 });
 
@@ -210,7 +250,13 @@ router.get('/inventory/', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.getInventoryItems());
+            ebayAcc.getInventoryItems().then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            });
         }).catch(next);
 });
 
@@ -225,7 +271,13 @@ router.post('/inventory/sku', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.getInventoryItem(req.body.sku));
+            ebayAcc.getInventoryItem(req.body.sku).then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            })
         }).catch(next);
 });
 
@@ -240,7 +292,13 @@ router.post('/inventory/offer', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.getOffer(req.body.offerid));
+            ebayAcc.getOffer(req.body.offerid).then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            });
         }).catch(next);
 });
 
@@ -255,7 +313,13 @@ router.post('/inventory/publishOffer', auth.required, function (req, res, next) 
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.publishOffer(req.body.offerid));
+            ebayAcc.publishOffer(req.body.offerid).then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            })
         }).catch(next);
 });
 
@@ -305,7 +369,13 @@ router.post('/inventory/createLocation', auth.required, function (req, res, next
                 return res.status(422).json({errors: "no ebay account found"})
             }
             console.log(req.body.location);
-            return res.json(await ebayAcc.createLocation(req.body.location));
+            ebayAcc.createLocation(req.body.location).then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            })
         }).catch(next);
 });
 
@@ -320,7 +390,13 @@ router.post('/inventory/getLocation', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.getLocation());
+            await ebayAcc.getLocation().then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            })
         }).catch(next);
 });
 
@@ -335,16 +411,22 @@ router.post('/inventory/setLocation', auth.required, function (req, res, next) {
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.setLocation(req.body.loc));
+            await ebayAcc.setLocation(req.body.loc).then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            })
         }).catch(next);
 });
 
 //-------------------------------------------TAXONOMY-------------------------------------------//
 
-router.get('/taxonomy/getDefaultCategory', auth.required, function(req, res, next){
+router.get('/taxonomy/getDefaultCategory', auth.required, function (req, res, next) {
     User.findById(req.payload.id)
         .populate("ebayAccounts")
-        .then(async function (user) {
+        .then(async function (user) {1
             if (!user) {
                 return res.status(422).json({error: "no user logged in"})
             }
@@ -352,7 +434,13 @@ router.get('/taxonomy/getDefaultCategory', auth.required, function(req, res, nex
             if (!ebayAcc) {
                 return res.status(422).json({errors: "no ebay account found"})
             }
-            return res.json(await ebayAcc.setDefaultCategory());
+            await ebayAcc.setDefaultCategory().then((success) => {
+                if (success) {
+                    return res.json(success);
+                } else {
+                    refresh(user, ebayAcc, res, next);
+                }
+            })
         }).catch(next);
 });
 

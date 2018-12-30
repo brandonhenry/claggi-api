@@ -1,5 +1,6 @@
+var info = require('../config/credentials.js');
 module.exports = {
   secret: process.env.NODE_ENV === 'production' ? process.env.SECRET : 'secret',
-    clientID: process.env.NODE_ENV === 'production' ? process.env.CLIENTID : 'BrandonH-SkuGrid-PRD-066850dff-54313674',
-    clientSecret: process.env.NODE_ENV === 'production' ? process.env.CLIENTSECRET : 'PRD-66850dfff6e9-feec-4725-8aed-13b2'
+    clientID: process.env.NODE_ENV === 'production' ? process.env.CLIENTID : info.id,
+    clientSecret: process.env.NODE_ENV === 'production' ? process.env.CLIENTSECRET : info.secret
 };

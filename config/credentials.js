@@ -1,7 +1,17 @@
-var ebaytoken = 'v^1.1%23i^1%23p^3%23f^0%23r^1%23I^3%23t^Ul41XzE6N0Q5MDM2QzdCNjQ3RjJDODlFRjM1ODRDNEQ5MzhCMTNfMl8xI0VeMjYw';
+var authorizationURL = 'https://auth.sandbox.ebay.com/oauth2/authorize?',
+    tokenURL = 'https://api.sandbox.ebay.com/identity/v1/oauth2/token',
+    clientID = 'BrandonH-SkuGrid-SBX-2bc40d285-5e9137e5',
+    clientSecret = 'SBX-bc40d28559c1-7758-4fd5-a999-9b40',
+    redirectURLName = 'Brandon_Henry-BrandonH-SkuGri-nvdhdguy',
+    scope = 'https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/sell.marketing.readonly https://api.ebay.com/oauth/api_scope/sell.marketing https://api.ebay.com/oauth/api_scope/sell.inventory.readonly https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account.readonly https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly https://api.ebay.com/oauth/api_scope/sell.fulfillment https://api.ebay.com/oauth/api_scope/sell.analytics.readonly';
 
-var appID = 'BrandonH-SkuGrid-PRD-066850dff-54313674';
-var cert = 'PRD-66850dfff6e9-feec-4725-8aed-13b2';
 
-var eBayCredentials = {appID, devID, cert, ebaytoken};
+var eBayCredentials = {
+    auth: authorizationURL,
+    token: tokenURL,
+    id: clientID,
+    secret: clientSecret,
+    redirect: redirectURLName,
+    scope: scope
+};
 module.exports = eBayCredentials;
