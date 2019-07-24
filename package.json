@@ -8,7 +8,7 @@
     "debug": "node %NODE_DEBUG_OPTION% ./app.js",
     "dev": "node ./app.js",
     "test": "newman run ./tests/api-tests.postman.json -e ./tests/env-api-tests.postman.json",
-    "stop": "lsof -ti :3000 | xargs kill",
+    "stop": "lsof -ti :3443 | xargs kill",
     "mongo:stop": "docker stop realworld-mongo && docker rm realworld-mongo"
   },
   "license": "ISC",
