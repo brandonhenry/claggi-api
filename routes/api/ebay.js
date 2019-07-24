@@ -12,7 +12,7 @@ function refresh(user, ebayAcc, res, next) {
             ebayAcc.accessToken = success.accessToken;
             ebayAcc.refreshToken = user.ebayRefreshToken;
             ebayAcc.save(function () {
-                return res.json({reRequestSuccess: info, message: "refresh token reset"})
+                return res.json({reRequestSuccess: success.info, message: "refresh token reset"})
             }).catch(next);
         }
     }).catch((err) => {

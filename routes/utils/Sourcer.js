@@ -107,17 +107,21 @@ class Sourcer {
             var azProducts = [];
             for (var i = 0; i < products.length; i++) {
                 if (products[i] === undefined) {
-                    count++;
+                    ++count;
                     return
                 }
-                count++;
+                ++count;
                 await this.findAmazonProduct(products[i])
                     .then((results) => {
-                        if (results){azProducts = azProducts.concat(results);}
-                        if (count === products.length) {resolve(azProducts);}
+                        if (results) {
+                            azProducts = azProducts.concat(results);
+                        }
                     }).catch((err) => {
-                    console.log(err)
-                });
+                        console.log(err)
+                    });
+                if (count === products.length - 1 || count === products.length) {
+                    resolve(azProducts);
+                }
             }
         })
     }
@@ -128,8 +132,12 @@ class Sourcer {
             for (var i = 0; i < products.length; i++) {
                 count++;
                 Offers.create(await this.amazonProductParser.parse(products[i]), (err) => {
-                    if (err) {console.log(err)}
-                    if (count === products.length) {resolve(true);}
+                    if (err) {
+                        console.log(err)
+                    }
+                    if (count === products.length) {
+                        resolve(true);
+                    }
                 });
             }
         })
@@ -158,7 +166,7 @@ class Sourcer {
                             console.log(res.ItemSearchErrorResponse.Error[0].Message[0]);
                             reject(false);
                         } else if (res.ItemSearchResponse.hasOwnProperty("Items")) {
-                            if (res.ItemSearchResponse.Items[0].Request[0].hasOwnProperty("Errors")){
+                            if (res.ItemSearchResponse.Items[0].Request[0].hasOwnProperty("Errors")) {
                                 reject(res.ItemSearchResponse.Items[0].Request[0].Errors[0].Error[0].Message[0]);
                             } else {
                                 resolve([res])

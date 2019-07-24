@@ -117,18 +117,17 @@ class Lister {
                         } else if (res.offerId) {
                             resolve(res.offerId)
                         } else if (res === false) {
-                            AccountValidator.refreshAccessToken(this.ebayAccount.ebayRefreshToken).then((success) => {
+                            AccountValidator.refreshAccessToken(this.ebayAccount.refreshToken).then((success) => {
                                 if (success) {
                                     this.ebayAccount.accessToken = success.accessToken;
-                                    this.ebayAccount.save(function () {
-                                        createOffer(item).catch((err) => {
+                                    this.ebayAccount.save(() => {
+                                        this.createOffer(item).catch((err) => {
                                             console.log(err);
                                         })
                                     }).catch();
                                 }
                             }).catch((err) => {
                                 console.log(err);
-                                return res.json({error: err})
                             });
                         } else {
                             throw new Error(res);

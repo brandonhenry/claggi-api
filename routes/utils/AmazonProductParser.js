@@ -4,6 +4,7 @@ module.exports = class AmazonProductParser {
     constructor(ebayAccount) {
         this.ebayAccount = ebayAccount;
         this.margin = 0.4;
+        this.quantity = 2;
     }
 
     getPrice(price) {
@@ -16,9 +17,17 @@ module.exports = class AmazonProductParser {
     async parse(res) {
         return new Promise((resolve, reject) => {
             var product = {};
-
+            product = this.concat(product, this.checkItemAttributes(res, "ASIN"));
+            product = this.concat(product, this.checkItemAttributes(res, "Image"));
+            product = this.concat(product, this.checkItemAttributes(res, "Title"));
+            product = this.concat(product, this.checkItemAttributes(res, "ListPrice"));
+            product = this.concat(product, this.checkItemAttributes(res, "ItemDimensions"));
+            product = this.concat(product, this.checkItemAttributes(res, "Brand"));
+            product = this.concat(product, this.checkItemAttributes(res, "Feature"));
+            product = this.concat(product, this.checkItemAttributes(res, "MPN"));
+            product = this.concat(product, this.checkItemAttributes(res, "EAN"));
             try {
-                resolve({
+                product = this.concat(product, {
                     source: "amazon",
                     ebayAccount: this.ebayAccount,
                     merchantLocationKey: this.ebayAccount.getMerchantLocationKey(),
@@ -28,9 +37,9 @@ module.exports = class AmazonProductParser {
                     paymentPolicy: this.ebayAccount.getPaymentPolicy(),
                     returnPolicy: this.ebayAccount.getReturnPolicy(),
                     fulfillmentPolicy: this.ebayAccount.getFulfillmentPolicy(),
-
-                })
-
+                    quantity: this.quantity
+                });
+                resolve(product);
             } catch (err) {
                 reject(err);
             }
@@ -44,22 +53,28 @@ module.exports = class AmazonProductParser {
         return o1;
     }
 
-    addASINandImage(res) {
-        if (res.ItemSearchResponse.Items[0].Item[0].hasOwnProperty("ASIN")) {
-            return {
-                sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0],
-                image: res.ItemSearchResponse.Items[0].Item[0].ImageSets[0].ImageSet[0].HiResImage[0].URL[0],
-            };
-        }
-    }
-
     checkItemAttributes(res, attr) {
+        if (!res.ItemSearchResponse.Items[0].hasOwnProperty("Item")){return;}
         if (!res.ItemSearchResponse.Items[0].Item[0].hasOwnProperty("ItemAttributes")) {
             return null;
         }
         switch (attr) {
+            case "ASIN":
+                if (res.ItemSearchResponse.Items[0].Item[0].hasOwnProperty("ASIN")) {
+                    return {
+                        sourceID: res.ItemSearchResponse.Items[0].Item[0].ASIN[0]
+                    };
+                }
+                break;
+            case "Image":
+                if (res.ItemSearchResponse.Items[0].Item[0].ImageSets[0].ImageSet[0].hasOwnProperty("HiResImage")) {
+                    return {
+                        image: res.ItemSearchResponse.Items[0].Item[0].ImageSets[0].ImageSet[0].HiResImage[0].URL[0]
+                    }
+                }
+                break;
             case "Title":
-                if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].hasOwnProperty("")) {
+                if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].hasOwnProperty("Title")) {
                     return {
                         title: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0],
                         categoryId: this.ebayAccount.getCategory(res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].Title[0])
@@ -75,22 +90,22 @@ module.exports = class AmazonProductParser {
                 var json = {};
                 if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].hasOwnProperty("ItemDimensions")) {
                     if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].hasOwnProperty("Height")) {
-                        json.put({height: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._ / 100).toFixed(2)});
+                        json = this.concat(json,{height: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Height[0]._ / 100).toFixed(2)});
                     }
                     if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].hasOwnProperty("Width")) {
-                        json.put({width: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._ / 100).toFixed(2)});
+                        json = this.concat(json, {width: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Width[0]._ / 100).toFixed(2)});
                     }
                     if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].hasOwnProperty("Height")) {
-                        json.put({length: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0]._ / 100).toFixed(2)});
+                        json = this.concat(json, {length: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0]._ / 100).toFixed(2)});
                     }
                     if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].hasOwnProperty("Length")) {
-                        json.put({dimensionUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0].$.Units.split('-')[1]});
+                        json = this.concat(json, {dimensionUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Length[0].$.Units.split('-')[1]});
                     }
                     if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].hasOwnProperty("Weight")) {
-                        json.put({weight: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0]._ / 100).toFixed(2)});
+                        json = this.concat(json, {weight: (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0]._ / 100).toFixed(2)});
                     }
                     if (res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].hasOwnProperty("Weight")) {
-                        json.put({weightUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0].$.Units.split(' ')[1],});
+                        json = this.concat(json, {weightUnit: res.ItemSearchResponse.Items[0].Item[0].ItemAttributes[0].ItemDimensions[0].Weight[0].$.Units.split(' ')[1],});
                     }
                     return json;
                 }
