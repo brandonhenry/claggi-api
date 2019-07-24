@@ -39,7 +39,7 @@ module.exports = class AccountValidator {
                 if (err) {
                     reject({error: err})
                 } else {
-                    resolve({accessToken: accessToken, refreshToken: refreshToken})
+                    resolve({accessToken: accessToken, refreshToken: refreshToken, info: true})
                 }
             });
         })
