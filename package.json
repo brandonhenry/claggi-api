@@ -9,6 +9,8 @@
     "dev": "node ./app.js",
     "test": "newman run ./tests/api-tests.postman.json -e ./tests/env-api-tests.postman.json",
     "stop": "lsof -ti :3000 | xargs kill",
+    "restart": "pm2 startOrRestart ecosystem.config.js",
+    "deploy": "pm2 deploy ecosystem.config.js production",
     "mongo:stop": "docker stop realworld-mongo && docker rm realworld-mongo"
   },
   "license": "ISC",
