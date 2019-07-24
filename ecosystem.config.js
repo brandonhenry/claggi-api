@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'claggi-deploy',
-    script: 'app.js'
+    script: './routes/index.js'
   }],
   deploy: {
     production: {
