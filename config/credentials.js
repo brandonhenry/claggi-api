@@ -14,4 +14,9 @@ var eBayCredentials = {
     redirect: redirectURLName,
     scope: scope
 };
+
+var oktaCredentials = {
+	authKey: "00eiglWU6Ulkv8vYPyNIAx0Dn4kz243OLVE7-NUh3D",
+	clientKey: "0oa1047vvhR9PytaF357"
+}
 module.exports = eBayCredentials;
